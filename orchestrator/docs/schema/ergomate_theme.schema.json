@@ -1,0 +1,240 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ergomate.fr/schemas/theme.json",
+  "title": "ErgoMate Theme Schema",
+  "description": "Schéma de validation pour les thèmes pédagogiques ErgoMate",
+  "type": "object",
+  "required": ["title", "description", "difficulty"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 255,
+      "description": "Titre du thème"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 1000,
+      "description": "Description du thème"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "advanced"],
+      "description": "Niveau de difficulté"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 10,
+      "description": "Tags pour catégoriser le thème"
+    },
+    "questions": {
+      "type": "array",
+      "description": "Liste des questions QCM",
+      "items": {
+        "$ref": "#/definitions/question"
+      },
+      "minItems": 1,
+      "maxItems": 100
+    },
+    "flashcards": {
+      "type": "array",
+      "description": "Liste des flashcards",
+      "items": {
+        "$ref": "#/definitions/flashcard"
+      },
+      "minItems": 1,
+      "maxItems": 200
+    },
+    "fiche": {
+      "type": "object",
+      "description": "Fiche de révision structurée",
+      "properties": {
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ficheSection"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "annales": {
+      "type": "array",
+      "description": "Exercices type annales",
+      "items": {
+        "$ref": "#/definitions/annale"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Métadonnées additionnelles",
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "question": {
+      "type": "object",
+      "required": ["id", "text", "choices", "correctAnswer"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identifiant unique de la question"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 5,
+          "description": "Texte de la question"
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 6,
+          "description": "Liste des choix possibles"
+        },
+        "correctAnswer": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Index de la bonne réponse (0-based)"
+        },
+        "explanation": {
+          "type": "string",
+          "description": "Explication de la réponse correcte"
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": ["easy", "medium", "hard"]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "points": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "Nombre de points pour cette question"
+        }
+      }
+    },
+    "flashcard": {
+      "type": "object",
+      "required": ["id", "front", "back"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identifiant unique de la flashcard"
+        },
+        "front": {
+          "type": "string",
+          "minLength": 3,
+          "description": "Face de la carte (question/terme)"
+        },
+        "back": {
+          "type": "string",
+          "minLength": 3,
+          "description": "Verso de la carte (réponse/définition)"
+        },
+        "hint": {
+          "type": "string",
+          "description": "Indice optionnel"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ficheSection": {
+      "type": "object",
+      "required": ["title", "content"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "description": "Titre de la section"
+        },
+        "content": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Contenu de la section (markdown supporté)"
+        },
+        "keyPoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Points clés à retenir"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Exemples illustratifs"
+        },
+        "subsections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ficheSection"
+          },
+          "description": "Sous-sections (récursif)"
+        }
+      }
+    },
+    "annale": {
+      "type": "object",
+      "required": ["id", "title", "questions"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "description": "Titre de l'annale (ex: 'Bac 2023')"
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 1900,
+          "maximum": 2100
+        },
+        "duration": {
+          "type": "integer",
+          "description": "Durée en minutes"
+        },
+        "questions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/question"
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}
