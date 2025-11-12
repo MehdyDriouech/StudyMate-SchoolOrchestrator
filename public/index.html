@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study-mate School Orchestrator</title>
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="container">
+                <h1>🎓 Study-mate School Orchestrator</h1>
+                <nav id="nav"></nav>
+            </div>
+        </header>
+        
+        <main class="main">
+            <div class="container">
+                <div id="content">
+                    <!-- Page d'accueil -->
+                    <div id="home-view" class="view active">
+                        <h2>Bienvenue sur Study-mate Orchestrator</h2>
+                        <p>Plateforme pédagogique connectée à ErgoMate</p>
+                        
+                        <div class="card-grid">
+                            <div class="card">
+                                <h3>📊 Dashboard</h3>
+                                <p>Visualisez les statistiques de vos classes</p>
+                                <button onclick="navigateTo('dashboard')">Accéder</button>
+                            </div>
+                            
+                            <div class="card">
+                                <h3>👨‍🎓 Élèves</h3>
+                                <p>Gérez vos élèves et leurs performances</p>
+                                <button onclick="navigateTo('students')">Accéder</button>
+                            </div>
+                            
+                            <div class="card">
+                                <h3>📝 Affectations</h3>
+                                <p>Créez et planifiez des activités</p>
+                                <button onclick="navigateTo('assignments')">Accéder</button>
+                            </div>
+                            
+                            <div class="card">
+                                <h3>🔄 Synchronisation</h3>
+                                <p>Synchronisez avec ErgoMate</p>
+                                <button onclick="navigateTo('sync')">Accéder</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Login view -->
+                    <div id="login-view" class="view">
+                        <div class="login-card">
+                            <h2>Connexion</h2>
+                            <form id="login-form">
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" id="email" required 
+                                           placeholder="claire.dubois@ife-paris.fr">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="password">Mot de passe</label>
+                                    <input type="password" id="password" required 
+                                           placeholder="Mot de passe">
+                                </div>
+                                
+                                <button type="submit">Se connecter</button>
+                                
+                                <p class="hint">
+                                    <small>Compte de test : claire.dubois@ife-paris.fr / Ergo2025!</small>
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Dashboard view -->
+                    <div id="dashboard-view" class="view">
+                        <h2>Dashboard Enseignant</h2>
+                        <div id="dashboard-content">
+                            <p>Chargement...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Students view -->
+                    <div id="students-view" class="view">
+                        <h2>Mes Élèves</h2>
+                        <div id="students-content">
+                            <p>Sélectionnez une classe</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Assignments view -->
+                    <div id="assignments-view" class="view">
+                        <h2>Affectations</h2>
+                        <div id="assignments-content">
+                            <p>Chargement...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Sync view -->
+                    <div id="sync-view" class="view">
+                        <h2>Synchronisation ErgoMate</h2>
+                        <div id="sync-content">
+                            <button onclick="triggerSync()">Déclencher une synchronisation</button>
+                            <div id="sync-logs"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <div class="container">
+                <p>© 2025 Study-mate Orchestrator - Mehdy Driouech</p>
+                <p>
+                    <a href="https://smso.mehdydriouech.fr/api/health" target="_blank">API Health</a> | 
+                    <a href="orchestrator/docs/openapi-orchestrator.yaml" target="_blank">API Docs</a> |
+                    <a href="diag" target="_blank">Diagnostics</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+    
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
