@@ -146,18 +146,32 @@ function payloadHash($data) {
  */
 function setCorsHeaders() {
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-    
-    if (in_array($origin, CORS_ALLOWED_ORIGINS)) {
-        header("Access-Control-Allow-Origin: $origin");
-    } else {
+
+    // Handle CORS_ALLOWED_ORIGINS - can be '*' string or array
+    $allowedOriginsConfig = CORS_ALLOWED_ORIGINS;
+
+    // If wildcard, allow all origins
+    if ($allowedOriginsConfig === '*') {
         header('Access-Control-Allow-Origin: *');
+    } else {
+        // Parse as array if string (comma-separated)
+        $allowedOrigins = is_array($allowedOriginsConfig)
+            ? $allowedOriginsConfig
+            : array_map('trim', explode(',', $allowedOriginsConfig));
+
+        // Check if origin is in allowed list
+        if (in_array($origin, $allowedOrigins)) {
+            header("Access-Control-Allow-Origin: $origin");
+        } else {
+            header('Access-Control-Allow-Origin: *');
+        }
     }
-    
+
     header('Access-Control-Allow-Methods: ' . CORS_ALLOWED_METHODS);
     header('Access-Control-Allow-Headers: ' . CORS_ALLOWED_HEADERS);
     header('Access-Control-Max-Age: ' . CORS_MAX_AGE);
     header('Access-Control-Allow-Credentials: true');
-    
+
     // Gérer les requêtes OPTIONS (preflight)
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         http_response_code(204);
