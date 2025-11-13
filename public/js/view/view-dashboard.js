@@ -92,6 +92,11 @@ async function initDashboardView() {
             <h3>📋 Activité récente</h3>
             <p>Chargement des activités...</p>
         </div>
+
+        <!-- Sprint 8: Social Section -->
+        <div class="social-section" id="social-section">
+            <p>⏳ Chargement de l'espace social...</p>
+        </div>
     `;
 
     // Load filter options first (if analytics are available)
@@ -116,6 +121,9 @@ async function initDashboardView() {
     if (currentUser.role === 'student') {
         promises.push(loadStudentRecommendations(currentUser.id));
     }
+
+    // Sprint 8: Load social dashboard
+    promises.push(initSocialDashboard());
 
     await Promise.all(promises);
 
@@ -436,6 +444,202 @@ function getActivityIcon(type, direction) {
         return '⬆️';
     }
     return '🔄';
+}
+
+// ============================================================
+// SPRINT 8: SOCIAL & COLLABORATIVE LEARNING
+// ============================================================
+
+/**
+ * Load Student Recommendations (Sprint 7 function referenced in dashboard)
+ */
+async function loadStudentRecommendations(studentId) {
+    const recoWidget = document.getElementById('recommendations-widget');
+    if (!recoWidget) return;
+
+    try {
+        const data = await apiCall(`/api/reco?studentId=${studentId}`);
+
+        if (!data.recommendations || data.recommendations.length === 0) {
+            recoWidget.innerHTML = '<p class="empty-message">Aucune recommandation disponible pour le moment</p>';
+            return;
+        }
+
+        let html = `
+            <h3>💡 Recommandations personnalisées pour toi</h3>
+            <div class="recommendations-list">
+        `;
+
+        data.recommendations.forEach(reco => {
+            html += `
+                <div class="recommendation-card">
+                    <h4>${reco.theme_title}</h4>
+                    <p>${reco.theme_description}</p>
+                    <p class="difficulty">Difficulté: ${reco.theme_difficulty}</p>
+                    <p class="explainability">${reco.explainability}</p>
+                    <div class="reasons">
+                        ${reco.reasons.map(r => `<span class="reason-badge">${r.label}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        recoWidget.innerHTML = html;
+
+    } catch (error) {
+        recoWidget.innerHTML = `<p class="error-message">Erreur: ${error.message}</p>`;
+    }
+}
+
+/**
+ * Initialize Social Dashboard Section
+ */
+async function initSocialDashboard() {
+    const socialSection = document.getElementById('social-section');
+    if (!socialSection) return;
+
+    // For students
+    if (currentUser.role === 'student') {
+        socialSection.innerHTML = `
+            <h3>🌐 Espace Social</h3>
+
+            <div class="social-tabs">
+                <button onclick="showSocialTab('leaderboard')" class="tab-btn active">🏆 Classement</button>
+                <button onclick="showSocialTab('shared')" class="tab-btn">📚 Contenus partagés</button>
+                <button onclick="showSocialTab('collaborative')" class="tab-btn">👥 Sessions collectives</button>
+            </div>
+
+            <div class="social-content">
+                <div id="social-tab-leaderboard" class="social-tab active"></div>
+                <div id="social-tab-shared" class="social-tab" style="display: none;"></div>
+                <div id="social-tab-collaborative" class="social-tab" style="display: none;"></div>
+            </div>
+        `;
+
+        // Load initial tab
+        loadSocialLeaderboard();
+    }
+
+    // For teachers
+    else if (canModerate(currentUser.role)) {
+        socialSection.innerHTML = `
+            <h3>🌐 Espace Social - Enseignant</h3>
+
+            <div class="social-tabs">
+                <button onclick="showSocialTab('leaderboard')" class="tab-btn active">🏆 Classement</button>
+                <button onclick="showSocialTab('shared')" class="tab-btn">📚 Contenus partagés</button>
+                <button onclick="showSocialTab('moderation')" class="tab-btn">⚖️ Modération</button>
+            </div>
+
+            <div class="social-content">
+                <div id="social-tab-leaderboard" class="social-tab active"></div>
+                <div id="social-tab-shared" class="social-tab" style="display: none;"></div>
+                <div id="social-tab-moderation" class="social-tab" style="display: none;"></div>
+            </div>
+        `;
+
+        loadSocialLeaderboard();
+    }
+}
+
+function showSocialTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.social-tab').forEach(tab => {
+        tab.style.display = 'none';
+    });
+
+    // Remove active class from buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected tab
+    const tab = document.getElementById(`social-tab-${tabName}`);
+    if (tab) {
+        tab.style.display = 'block';
+        event.target.classList.add('active');
+
+        // Load content based on tab
+        switch (tabName) {
+            case 'leaderboard':
+                loadSocialLeaderboard();
+                break;
+            case 'shared':
+                loadSocialSharedContent();
+                break;
+            case 'collaborative':
+                loadSocialCollaborative();
+                break;
+            case 'moderation':
+                loadSocialModeration();
+                break;
+        }
+    }
+}
+
+async function loadSocialLeaderboard() {
+    const container = document.getElementById('social-tab-leaderboard');
+    if (!container) return;
+
+    // Use the renderLeaderboard function from view-social.js
+    if (typeof renderLeaderboard === 'function') {
+        container.id = 'leaderboard-container';
+        await renderLeaderboard('leaderboard-container', {
+            period: 'monthly',
+            anonymize: false
+        });
+    } else {
+        container.innerHTML = '<p>⏳ Chargement du module social...</p>';
+    }
+}
+
+async function loadSocialSharedContent() {
+    const container = document.getElementById('social-tab-shared');
+    if (!container) return;
+
+    if (typeof renderSharedContent === 'function') {
+        container.id = 'shared-content-container';
+        await renderSharedContent('shared-content-container');
+    } else {
+        container.innerHTML = '<p>⏳ Chargement du module social...</p>';
+    }
+}
+
+async function loadSocialCollaborative() {
+    const container = document.getElementById('social-tab-collaborative');
+    if (!container) return;
+
+    container.innerHTML = `
+        <h3>👥 Sessions collaboratives</h3>
+
+        <div class="collaborative-actions">
+            <button onclick="createCollaborativeSession()" class="btn-primary">
+                ➕ Créer une session
+            </button>
+            <button onclick="joinCollaborativeSessionByCode()" class="btn-secondary">
+                🔗 Rejoindre avec un code
+            </button>
+        </div>
+
+        <div id="active-sessions-list">
+            <p>⏳ Chargement des sessions actives...</p>
+        </div>
+    `;
+
+    // TODO: Load active sessions list
+}
+
+async function loadSocialModeration() {
+    const container = document.getElementById('social-tab-moderation');
+    if (!container) return;
+
+    if (typeof renderModerationQueue === 'function') {
+        container.id = 'moderation-queue-container';
+        await renderModerationQueue('moderation-queue-container');
+    } else {
+        container.innerHTML = '<p>⏳ Chargement du module modération...</p>';
+    }
 }
 
 /**

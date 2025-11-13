@@ -86,6 +86,8 @@ tags:
     description: 'Sprint 5: Learning Cycle - Endpoints côté élève (missions, progression, badges, révisions)'
   - name: Adaptive
     description: 'Sprint 7: Adaptive Learning - Recommandations IA, difficulté adaptative, mode focus, validation enseignant, détection fatigue'
+  - name: Social
+    description: 'Sprint 8: Social & Collaborative Learning - Classements, partages, commentaires, révision collective, modération'
 
 paths:
   /api/health:
@@ -1629,6 +1631,569 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # Sprint 8: Social & Collaborative Learning
+  # ============================================================
+
+  /api/social/leaderboard:
+    get:
+      tags: [Social]
+      summary: 'E8-LB: Get leaderboard rankings'
+      description: |
+        Récupère les classements par thème avec filtres.
+        Supports hebdo, mensuel et all-time.
+        Anonymisation optionnelle.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: theme_id
+          in: query
+          schema:
+            type: string
+          description: Filtrer par thème spécifique
+        - name: class_id
+          in: query
+          schema:
+            type: string
+          description: Filtrer par classe spécifique
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [weekly, monthly, all_time]
+            default: all_time
+          description: Période du classement
+        - name: anonymize
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Anonymiser les élèves
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Classement récupéré
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  period:
+                    type: string
+                  theme_id:
+                    type: string
+                    nullable: true
+                  class_id:
+                    type: string
+                    nullable: true
+                  anonymized:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rank:
+                          type: integer
+                        student_id:
+                          type: string
+                        firstname:
+                          type: string
+                        lastname:
+                          type: string
+                        total_score:
+                          type: number
+                        total_sessions:
+                          type: integer
+                        avg_mastery:
+                          type: number
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/social/content/share:
+    post:
+      tags: [Social]
+      summary: 'E8-SHARE: Share student-created content'
+      description: |
+        Partage du contenu créé par un élève.
+        Passe en modération automatiquement.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [student_id, content_type, title, content]
+              properties:
+                student_id:
+                  type: string
+                theme_id:
+                  type: string
+                content_type:
+                  type: string
+                  enum: [flashcard, note, summary, mnemo, quiz]
+                title:
+                  type: string
+                content:
+                  type: object
+                description:
+                  type: string
+                is_public:
+                  type: boolean
+                target_class_id:
+                  type: string
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Contenu partagé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  id:
+                    type: string
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/social/content/shared:
+    get:
+      tags: [Social]
+      summary: 'E8-SHARE: Get shared content'
+      description: |
+        Récupère les contenus partagés approuvés.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: class_id
+          in: query
+          schema:
+            type: string
+        - name: theme_id
+          in: query
+          schema:
+            type: string
+        - name: content_type
+          in: query
+          schema:
+            type: string
+            enum: [flashcard, note, summary, mnemo, quiz]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Liste des contenus partagés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/social/comments:
+    post:
+      tags: [Social]
+      summary: 'E8-PEER: Post peer comment'
+      description: |
+        Poster un commentaire sur du contenu partagé.
+        Supporte les threads (réponses).
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [student_id, comment_text]
+              properties:
+                student_id:
+                  type: string
+                shared_content_id:
+                  type: string
+                parent_comment_id:
+                  type: string
+                  description: Pour les réponses
+                comment_text:
+                  type: string
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Commentaire publié
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  id:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/social/content/{id}/comments:
+    get:
+      tags: [Social]
+      summary: 'E8-PEER: Get comments for content'
+      description: |
+        Récupère tous les commentaires pour un contenu partagé.
+        Inclut les threads.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Liste des commentaires
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  threads:
+                    type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/social/sessions/collaborative:
+    post:
+      tags: [Social]
+      summary: 'E8-COLLAB: Create collaborative session'
+      description: |
+        Créer une session de révision collective synchronisée.
+        Génère un code unique pour rejoindre.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [creator_student_id, theme_id, title]
+              properties:
+                creator_student_id:
+                  type: string
+                theme_id:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                max_participants:
+                  type: integer
+                  default: 10
+                session_type:
+                  type: string
+                  enum: [quiz_battle, flashcard_review, study_group]
+                  default: study_group
+                duration_minutes:
+                  type: integer
+                  default: 30
+                questions:
+                  type: array
+                  items:
+                    type: object
+                settings:
+                  type: object
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Session créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  session_id:
+                    type: string
+                  session_code:
+                    type: string
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/social/sessions/collaborative/join:
+    post:
+      tags: [Social]
+      summary: 'E8-COLLAB: Join collaborative session'
+      description: |
+        Rejoindre une session avec le code.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [session_code, student_id]
+              properties:
+                session_code:
+                  type: string
+                student_id:
+                  type: string
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Session rejointe
+        '404':
+          description: Session non trouvée
+        '409':
+          description: Session complète
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/social/sessions/collaborative/{id}:
+    get:
+      tags: [Social]
+      summary: 'E8-COLLAB: Get session details'
+      description: |
+        Récupère les détails d'une session et la liste des participants.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Détails de la session
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/social/moderation/queue:
+    get:
+      tags: [Social]
+      summary: 'E8-MOD: Get moderation queue'
+      description: |
+        File d'attente de modération (enseignants/admins).
+        IA + validation humaine.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, in_review, approved, rejected]
+            default: pending
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: File de modération
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/social/moderation/queue/{id}/approve:
+    post:
+      tags: [Social]
+      summary: 'E8-MOD: Approve moderation item'
+      description: |
+        Approuver un contenu en attente de modération.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                notes:
+                  type: string
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Contenu approuvé
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/social/moderation/queue/{id}/reject:
+    post:
+      tags: [Social]
+      summary: 'E8-MOD: Reject moderation item'
+      description: |
+        Rejeter un contenu en attente de modération.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                notes:
+                  type: string
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Contenu rejeté
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /realtime/collaborative/polling:
+    get:
+      tags: [Social]
+      summary: 'E8-COLLAB: Real-time polling endpoint'
+      description: |
+        Polling endpoint pour sessions collaboratives.
+        Fallback 15-30s si WebSocket indisponible.
+        Long-polling supporté.
+      parameters:
+        - name: session_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: student_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: last_poll
+          in: query
+          schema:
+            type: integer
+          description: Timestamp du dernier poll
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: État de la session
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  timestamp:
+                    type: integer
+                  session:
+                    type: object
+                  participants:
+                    type: array
+                    items:
+                      type: object
+                  updates:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
 components:
   securitySchemes:
