@@ -121,15 +121,6 @@
       context-diagram.md
       sequence-diagrams.md
 
-  logs/
-    app.log          (runtime)
-    telemetry.log    (runtime)
-    backups.log      (runtime)
-
-  templates/
-    spec-template.md
-    plan-template.md
-    tasks-template.md
 ```
 
 ```
