@@ -30,12 +30,6 @@
 
 ## 🏗️ Architecture
 
-```
- project-root/
-  constitution.md
-  .specify/
-  memory/
-
   orchestrator/
     core/
       config.php
