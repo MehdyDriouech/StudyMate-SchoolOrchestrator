@@ -71,9 +71,13 @@
         "author": {
           "type": "string"
         },
+        "author_id": {
+          "type": "string",
+          "description": "ID de l'enseignant créateur"
+        },
         "source": {
           "type": "string",
-          "enum": ["manual", "ai_generated", "imported"]
+          "enum": ["manual", "ai_generated", "imported", "template"]
         },
         "ai_model": {
           "type": "string",
@@ -84,7 +88,138 @@
           "format": "date-time"
         },
         "version": {
-          "type": "string"
+          "type": "string",
+          "description": "Version sémantique (ex: 1.0.0)"
+        },
+        "version_number": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Numéro de version incrémental"
+        },
+        "parent_version_id": {
+          "type": "string",
+          "description": "ID de la version parente"
+        },
+        "workflow_status": {
+          "type": "string",
+          "enum": ["draft", "in_review", "approved", "published", "archived"],
+          "default": "draft",
+          "description": "Statut dans le workflow de publication"
+        },
+        "last_modified_by": {
+          "type": "string",
+          "description": "ID du dernier modificateur"
+        },
+        "last_modified_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "collaborators": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "user_id": {"type": "string"},
+              "user_name": {"type": "string"},
+              "role": {
+                "type": "string",
+                "enum": ["owner", "editor", "reviewer", "viewer"]
+              },
+              "added_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "description": "Liste des collaborateurs sur ce thème"
+        },
+        "change_summary": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Résumé des modifications de cette version"
+        },
+        "template_id": {
+          "type": "string",
+          "description": "ID du template source si créé depuis un template"
+        },
+        "import_source": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "type": "string",
+              "enum": ["quizlet", "kahoot", "qti", "csv", "json"]
+            },
+            "original_filename": {"type": "string"},
+            "imported_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "description": "Métadonnées d'import si thème importé"
+        },
+        "ai_improvements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "element_id": {"type": "string"},
+              "element_type": {
+                "type": "string",
+                "enum": ["question", "choice", "explanation", "flashcard", "fiche_section"]
+              },
+              "action": {
+                "type": "string",
+                "enum": ["simplify", "complexify", "clarify", "shorten", "expand"]
+              },
+              "original_text": {"type": "string"},
+              "improved_text": {"type": "string"},
+              "improved_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "improved_by": {"type": "string"}
+            }
+          },
+          "description": "Historique des améliorations IA appliquées"
+        },
+        "validation": {
+          "type": "object",
+          "properties": {
+            "schema_valid": {"type": "boolean"},
+            "pedagogical_score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "difficulty_analysis": {
+              "type": "object",
+              "properties": {
+                "estimated_level": {
+                  "type": "string",
+                  "enum": ["easy", "normal", "expert"]
+                },
+                "consistency": {"type": "boolean"},
+                "warnings": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                }
+              }
+            },
+            "last_validated_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "description": "Résultats de validation et analyse qualité"
+        },
+        "usage_stats": {
+          "type": "object",
+          "properties": {
+            "preview_count": {"type": "integer"},
+            "test_runs": {"type": "integer"},
+            "published_count": {"type": "integer"}
+          },
+          "description": "Statistiques d'utilisation du thème"
         }
       }
     }
