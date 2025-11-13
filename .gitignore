@@ -1,0 +1,49 @@
+# Logs
+logs/
+*.log
+
+# Environment configuration
+.env.php
+.env.local.php
+
+# Cache
+cache/
+*.cache
+
+# Uploads
+uploads/
+*.tmp
+
+# Backups
+backups/
+*.sql.gz
+*.sql.bak
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Composer
+vendor/
+composer.lock
+
+# Node
+node_modules/
+package-lock.json
+npm-debug.log
+
+# Test artifacts
+coverage/
+.phpunit.result.cache
+
+# Temporary files
+tmp/
+temp/
+*.bak
