@@ -1,7 +1,7 @@
 # 🎓 Study-mate School Orchestrator
 
-**Version** : 1.0.0 (MVP - Sprint 0 + Sprint 1 + Sprint 2 + Sprint 3 + Sprint 4 + Sprint 5 + Sprint 6 + Sprint 7 + Sprint 8)  
-**Date** : 2025-11-12  
+**Version** : 1.0.0  
+**Date** : 2025-11-13  
 **Auteur** : Mehdy Driouech
 
 ---
@@ -18,77 +18,125 @@
 
 ---
 
-## ✨ Fonctionnalités (MVP Sprint 0 + 1)
+## ✨ Fonctionnalités 
 
-### ✅ Infrastructure (Sprint 0)
-- [x] Architecture multi-tenant sécurisée
-- [x] Authentification hybride (UrlEncoded + JWT)
-- [x] Base de données MySQL optimisée
-- [x] Système de logs rotatifs
-- [x] Diagnostics système sans SSH
-- [x] API REST documentée (OpenAPI 3.1)
-
-### ✅ Core MVP (Sprint 1)
-- [x] Dashboard enseignant avec KPIs
-- [x] Gestion des classes et élèves
-- [x] Création et affectation d'activités
-- [x] Synchronisation avec ErgoMate (mocks)
-- [x] Webhooks ErgoMate
-- [x] Préparation Mistral AI (BYOK)
+- **Orchestrator** : backend multi-tenant, API pédagogique, UI prof/direction/admin, intégration IA.
+- **Suite de création & Catalogue interne** : création/édition de thèmes, validation par référent, publication.
+- **Analytics & IA** : KPIs, heatmaps, alertes, copilote IA enseignant, rapports.
+- **Social & collaboratif** : leaderboards, sessions de révision synchronisées.
+- **Ops & institutionnel** : backups, diagnostic système, API académique, export QTI/ENT/LMS.
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-studymate-orchestrator/
-├── orchestrator/                   # Backend PHP
-│   ├── .env.php                   # Configuration (à créer depuis .env.php.example)
-│   ├── api/                       # Endpoints REST
-│   │   ├── health.php            # GET /api/health
-│   │   ├── auth.php              # POST /api/auth/login, GET /api/auth/me
-│   │   ├── students.php          # GET /api/students
-│   │   ├── classes.php           # GET /api/classes
-│   │   ├── themes.php            # GET /api/themes
-│   │   ├── assignments.php       # CRUD assignments
-│   │   ├── stats.php             # GET /api/stats
-│   │   ├── sync.php              # POST /api/sync/pull-stats
-│   │   ├── dashboard.php         # GET /api/dashboard/summary
-│   │   ├── mistral.php           # Mistral AI queue
-│   │   └── webhooks/
-│   │       └── ergo.php          # Webhooks ErgoMate
-│   ├── lib/                       # Bibliothèques
-│   │   ├── auth.php              # Authentification hybride
-│   │   ├── db.php                # Couche base de données
-│   │   ├── logger.php            # Logs rotatifs
-│   │   └── util.php              # Fonctions utilitaires
-│   ├── docs/
-│   │   └── openapi-orchestrator.yaml  # Contrat API complet
-│   ├── sql/
-│   │   ├── schema.sql            # Schéma DB
-│   │   └── seeds.sql             # Données de test
-│   ├── logs/                      # Logs (rotation auto 5Mo x5)
-│   └── diag.php                   # Diagnostics système
-│
-├── public/                         # Frontend SPA
-│   ├── index.html                 # Application principale
-│   ├── diag.html                  # Interface diagnostics
-│   ├── js/
-│   │   ├── app.js                # Point d'entrée
-│   │   ├── view/                 # Vues (view-*.js)
-│   │   │   └── view-dashboard.js
-│   │   └── features/             # Contrôleurs (feature-*.js)
-│   │       ├── feature-dashboard.js
-│   │       ├── feature-sync.js
-│   │       └── feature-assignments.js
-│   ├── assets/
-│   │   └── styles.css
-│   ├── vendor/
-│   │   └── chart.js/             # Chart.js local
-│   └── mock/                      # Mocks ErgoMate (dev)
-│
-├── .htaccess                       # Rewrite rules Apache
-└── README.md                       # Ce fichier
+ project-root/
+  constitution.md
+  .specify/
+  memory/
+
+  orchestrator/
+    core/
+      config.php
+      config.local.php (optionnel, non versionné)
+      constants.php
+      bootstrap.php
+    api/
+      health.php
+      students.php
+      assignments.php
+      analytics.php
+      ai.php
+      themes.php
+      catalog.php
+      social.php
+      academic.php
+      system_diagnostic.php
+      _inc/
+        db.php
+        auth.php
+        tenant.php
+        rbac.php
+        log.php
+        telemetry.php
+        rate_limit.php
+    services/
+      mailer.php
+      notify.php
+      ai_client.php
+      ai_postprocess.php
+      schema_validator.php
+      theme_service.php
+      catalog_service.php
+      analytics_service.php
+      backup_service.php
+      export_qti.php
+      converters/
+        quizlet_import.php
+        kahoot_import.php
+        qti_import.php
+        qti_export.php
+    jobs/
+      export_telemetry.php
+      backup_weekly.php
+    ui/
+      public/
+        index.html
+        css/
+          main.css
+        js/
+          app.js
+          services/
+            api.js
+          view/
+            view-dashboard-prof.js
+            view-dashboard-dir.js
+            view-assignments.js
+            view-theme-editor.js
+            view-catalog.js
+            view-analytics.js
+            view-admin.js
+            view-social.js
+          features/
+            feature-auth.js
+            feature-assignments.js
+            feature-analytics.js
+            feature-theme-editor.js
+            feature-catalog.js
+            feature-social.js
+            feature-system-diagnostic.js
+
+
+  db/
+    migrations/
+      001_init.sql
+      002_themes.sql
+      003_assignments.sql
+      004_stats.sql
+      005_catalog_ai.sql
+      006_telemetry.sql
+      007_backups.sql
+    migrate.php
+
+  docs/
+    openapi-orchestrator.yaml
+    schema/
+      ergomate_theme.schema.json
+    architecture/
+      context-diagram.md
+      sequence-diagrams.md
+
+  logs/
+    app.log          (runtime)
+    telemetry.log    (runtime)
+    backups.log      (runtime)
+
+  templates/
+    spec-template.md
+    plan-template.md
+    tasks-template.md
+```
 
 ```
 
