@@ -1,0 +1,723 @@
+openapi: 3.0.3
+info:
+  title: StudyMate School Orchestrator - Sprint 16 Analytics API
+  description: |
+    Sprint 16: Teacher Quality & Risk Analytics APIs
+    - Teacher Performance Dashboard (KPIs)
+    - Student Risk Detection & Remediation
+    - Quality Feed for Pedagogical Issues
+  version: 1.0.0
+  contact:
+    name: StudyMate Support
+    email: support@studymate.com
+
+servers:
+  - url: https://orchestrator.studymate.com/api
+    description: Production
+  - url: http://localhost:8000/api
+    description: Local Development
+
+tags:
+  - name: Teacher Analytics
+    description: Teacher performance and quality metrics
+  - name: Risk Analytics
+    description: Student risk detection and remediation
+  - name: Quality Feed
+    description: Pedagogical quality issues and feedback
+
+paths:
+  /analytics/teacher-kpi:
+    get:
+      tags:
+        - Teacher Analytics
+      summary: Get Teacher Performance KPIs
+      description: |
+        Returns teacher performance metrics including:
+        - Student engagement rates
+        - Mission completion rates
+        - Theme quality scores
+        - Student performance metrics
+        - Comparison with tenant average
+      operationId: getTeacherKPI
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: teacher_id
+          in: query
+          description: Teacher ID (if not provided, returns all teachers summary)
+          schema:
+            type: string
+          required: false
+        - name: period_start
+          in: query
+          description: Start date for the period (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            default: "30 days ago"
+        - name: period_end
+          in: query
+          description: End date for the period (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            default: "today"
+        - name: export
+          in: query
+          description: Export format (pdf)
+          schema:
+            type: string
+            enum: [pdf]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenant_id:
+                    type: string
+                  teacher_id:
+                    type: string
+                  period:
+                    type: object
+                    properties:
+                      start:
+                        type: string
+                        format: date
+                      end:
+                        type: string
+                        format: date
+                  kpi:
+                    $ref: '#/components/schemas/TeacherKPI'
+                  generated_at:
+                    type: string
+                    format: date-time
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /analytics/risk:
+    get:
+      tags:
+        - Risk Analytics
+      summary: Get Student Risk Analytics
+      description: |
+        Returns students at risk based on:
+        - Delays and late assignments
+        - Abandonment patterns
+        - Low performance scores
+        - Engagement drops
+        - Time inefficiency
+      operationId: getStudentRisk
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: class_id
+          in: query
+          description: Filter by class ID
+          schema:
+            type: string
+        - name: risk_level
+          in: query
+          description: Filter by risk level
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [detected, in_review, remediation_planned, resolved, false_positive]
+            default: detected
+        - name: recalculate
+          in: query
+          description: Force recalculation of risk scores
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenant_id:
+                    type: string
+                  filters:
+                    type: object
+                  students_at_risk:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RiskStudent'
+                  heatmap:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClassRiskHeatmap'
+                  summary:
+                    type: object
+                    properties:
+                      total_at_risk:
+                        type: integer
+                      critical:
+                        type: integer
+                      high:
+                        type: integer
+                      medium:
+                        type: integer
+                      low:
+                        type: integer
+                  generated_at:
+                    type: string
+                    format: date-time
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - Risk Analytics
+      summary: Update Risk Status
+      description: Update risk status, add notes, or mark as reviewed
+      operationId: updateRiskStatus
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                risk_id:
+                  type: string
+                  description: Risk record ID
+                status:
+                  type: string
+                  enum: [detected, in_review, remediation_planned, resolved, false_positive]
+                notes:
+                  type: string
+                  description: Notes from referent or teacher
+              required:
+                - risk_id
+      responses:
+        '200':
+          description: Risk status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  risk_id:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /feed/quality:
+    get:
+      tags:
+        - Quality Feed
+      summary: Get Quality Issues Feed
+      description: |
+        Returns pedagogical quality issues including:
+        - AI-detected incoherences
+        - Student feedback and reports
+        - Structural problems
+        - Content errors
+      operationId: getQualityFeed
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: theme_id
+          in: query
+          description: Filter by theme ID
+          schema:
+            type: string
+        - name: teacher_id
+          in: query
+          description: Filter by teacher ID
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [open, in_progress, resolved, ignored, wont_fix]
+        - name: severity
+          in: query
+          description: Filter by severity
+          schema:
+            type: string
+            enum: [info, warning, error, critical]
+        - name: issue_type
+          in: query
+          description: Filter by issue type
+          schema:
+            type: string
+            enum: [ai_incoherence, student_feedback, structure_problem, content_error, other]
+        - name: limit
+          in: query
+          description: Number of results per page (max 100)
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenant_id:
+                    type: string
+                  filters:
+                    type: object
+                  issues:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QualityIssue'
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      limit:
+                        type: integer
+                      offset:
+                        type: integer
+                      has_more:
+                        type: boolean
+                  summary:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      open:
+                        type: integer
+                      in_progress:
+                        type: integer
+                      resolved:
+                        type: integer
+                      by_severity:
+                        type: object
+                        properties:
+                          critical:
+                            type: integer
+                          error:
+                            type: integer
+                          warning:
+                            type: integer
+                  generated_at:
+                    type: string
+                    format: date-time
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - Quality Feed
+      summary: Create Quality Issue
+      description: Create a new quality issue (manual detection)
+      operationId: createQualityIssue
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                theme_id:
+                  type: string
+                  description: Related theme ID
+                issue_type:
+                  type: string
+                  enum: [ai_incoherence, student_feedback, structure_problem, content_error, other]
+                  default: other
+                severity:
+                  type: string
+                  enum: [info, warning, error, critical]
+                  default: warning
+                title:
+                  type: string
+                  description: Issue title
+                description:
+                  type: string
+                  description: Detailed description
+                source:
+                  type: string
+                  enum: [ai_analysis, student_report, auto_detection, manual]
+                  default: manual
+              required:
+                - title
+                - description
+      responses:
+        '201':
+          description: Quality issue created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  issue_id:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    patch:
+      tags:
+        - Quality Feed
+      summary: Update Quality Issue
+      description: Update issue status, assign to user, or add resolution notes
+      operationId: updateQualityIssue
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                issue_id:
+                  type: string
+                  description: Issue ID to update
+                status:
+                  type: string
+                  enum: [open, in_progress, resolved, ignored, wont_fix]
+                assigned_to:
+                  type: string
+                  description: User ID to assign
+                resolution_notes:
+                  type: string
+                  description: Resolution notes
+              required:
+                - issue_id
+      responses:
+        '200':
+          description: Issue updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  issue_id:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    TeacherKPI:
+      type: object
+      properties:
+        teacher:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            email:
+              type: string
+        engagement:
+          type: object
+          properties:
+            total_students:
+              type: integer
+            active_students:
+              type: integer
+            engagement_rate:
+              type: number
+              format: float
+            vs_tenant_avg:
+              type: number
+              format: float
+        missions:
+          type: object
+          properties:
+            total_created:
+              type: integer
+            total_pushed:
+              type: integer
+            completion_rate:
+              type: number
+              format: float
+        themes:
+          type: object
+          properties:
+            created_count:
+              type: integer
+            avg_quality:
+              type: number
+              format: float
+            ai_issues_count:
+              type: integer
+        student_performance:
+          type: object
+          properties:
+            avg_score:
+              type: number
+              format: float
+            avg_mastery:
+              type: number
+              format: float
+            vs_tenant_avg:
+              type: number
+              format: float
+        overall_score:
+          type: number
+          format: float
+        period:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date
+            end:
+              type: string
+              format: date
+
+    RiskStudent:
+      type: object
+      properties:
+        id:
+          type: string
+        student:
+          type: object
+          properties:
+            id:
+              type: string
+            uuid:
+              type: string
+            name:
+              type: string
+            class_id:
+              type: string
+            class_name:
+              type: string
+        risk:
+          type: object
+          properties:
+            score:
+              type: number
+              format: float
+            level:
+              type: string
+              enum: [low, medium, high, critical]
+            factors:
+              type: object
+              properties:
+                delay:
+                  type: number
+                abandonment:
+                  type: number
+                low_performance:
+                  type: number
+                time_inefficiency:
+                  type: number
+                engagement_drop:
+                  type: number
+        metrics:
+          type: object
+          properties:
+            missions_late:
+              type: integer
+            missions_abandoned:
+              type: integer
+            avg_score:
+              type: number
+            avg_time_minutes:
+              type: integer
+            last_activity_days_ago:
+              type: integer
+        recommendations:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              title:
+                type: string
+              description:
+                type: string
+              actions:
+                type: array
+                items:
+                  type: string
+        priority:
+          type: integer
+        status:
+          type: string
+        detected_at:
+          type: string
+          format: date-time
+
+    ClassRiskHeatmap:
+      type: object
+      properties:
+        class_id:
+          type: string
+        class_name:
+          type: string
+        total_students:
+          type: integer
+        students_at_risk:
+          type: integer
+        risk_rate:
+          type: number
+          format: float
+        avg_risk_score:
+          type: number
+          format: float
+        breakdown:
+          type: object
+          properties:
+            critical:
+              type: integer
+            high:
+              type: integer
+            medium:
+              type: integer
+            low:
+              type: integer
+
+    QualityIssue:
+      type: object
+      properties:
+        id:
+          type: string
+        theme:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+        teacher:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+        issue:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [ai_incoherence, student_feedback, structure_problem, content_error, other]
+            severity:
+              type: string
+              enum: [info, warning, error, critical]
+            title:
+              type: string
+            description:
+              type: string
+            source:
+              type: string
+              enum: [ai_analysis, student_report, auto_detection, manual]
+        status:
+          type: string
+          enum: [open, in_progress, resolved, ignored, wont_fix]
+        affected_students_count:
+          type: integer
+        related_data:
+          type: object
+        detected_by:
+          type: object
+          nullable: true
+        assigned_to:
+          type: object
+          nullable: true
+        resolved:
+          type: object
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              required_permission:
+                type: string
+              your_role:
+                type: string
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string

@@ -139,6 +139,27 @@ const RBAC_PERMISSIONS = [
         'update' => ['admin', 'direction'],  // Update catalog entries
         'publish_to_ergo' => ['admin', 'teacher', 'direction'],  // Push to Ergo-Mate
     ],
+
+    // Teacher KPI (Sprint 16 - Teacher Quality Analytics)
+    'teacher_kpi' => [
+        'read' => ['admin', 'direction', 'inspector'],  // View teacher performance
+        'export' => ['admin', 'direction', 'inspector'],  // Export teacher reports
+    ],
+
+    // Risk Analytics (Sprint 16 - Student Risk Detection)
+    'risk' => [
+        'read' => ['admin', 'teacher', 'direction', 'inspector', 'referent'],  // View risk data
+        'update' => ['admin', 'direction', 'referent'],  // Update risk status
+        'export' => ['admin', 'direction', 'referent'],  // Export risk reports
+    ],
+
+    // Quality Feed (Sprint 16 - Pedagogical Quality Issues)
+    'quality_feed' => [
+        'read' => ['admin', 'teacher', 'direction', 'inspector', 'referent'],  // View quality issues
+        'create' => ['admin', 'teacher', 'direction', 'referent'],  // Create quality issues
+        'update' => ['admin', 'direction', 'referent'],  // Update/resolve issues
+        'assign' => ['admin', 'direction', 'referent'],  // Assign issues to teachers
+    ],
 ];
 
 /**
