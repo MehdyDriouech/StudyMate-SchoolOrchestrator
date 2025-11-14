@@ -1,0 +1,1041 @@
+# Sprint 19 - Multi-Review Workflow & Quality Validation
+# Documentation OpenAPI des endpoints de validation multi-acteurs
+
+tags:
+  - name: Workflow
+    description: 'Sprint 19: Multi-Review Workflow - Gestion du workflow de validation des thèmes (draft → pending_review → approved → published)'
+  - name: Annotations
+    description: 'Sprint 19: Annotations - Système de commentaires et annotations sur les thèmes avec suggestions IA'
+  - name: Versions
+    description: 'Sprint 19: Versioning - Historique et comparaison des versions de thèmes'
+
+paths:
+  # ============================================================
+  # WORKFLOW ENDPOINTS
+  # ============================================================
+
+  /api/workflow/stats:
+    get:
+      tags: [Workflow]
+      summary: Statistiques du workflow par tenant
+      description: Récupère le nombre de thèmes par statut (draft, pending_review, approved, published)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Statistiques récupérées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  tenant_id:
+                    type: string
+                  stats:
+                    type: object
+                    properties:
+                      draft:
+                        type: integer
+                      pending_review:
+                        type: integer
+                      approved:
+                        type: integer
+                      published:
+                        type: integer
+                      archived:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/workflow/themes/{themeId}/submit:
+    post:
+      tags: [Workflow]
+      summary: Soumettre un thème pour validation
+      description: |
+        Soumettre un thème en statut 'draft' pour validation par un référent.
+        Transition: draft → pending_review
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: themeId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                  description: Commentaire optionnel
+      responses:
+        '200':
+          description: Thème soumis avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowTransitionResponse'
+        '400':
+          description: Erreur (thème incomplet, mauvais statut, etc.)
+        '403':
+          description: Permissions insuffisantes
+
+  /api/workflow/themes/{themeId}/approve:
+    post:
+      tags: [Workflow]
+      summary: Approuver un thème
+      description: |
+        Approuver un thème en attente de validation (référent/direction/admin).
+        Transition: pending_review → approved
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: themeId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                  description: Commentaire d'approbation
+      responses:
+        '200':
+          description: Thème approuvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowTransitionResponse'
+        '400':
+          description: Erreur (annotations ouvertes, mauvais statut, etc.)
+        '403':
+          description: Rôle référent requis
+
+  /api/workflow/themes/{themeId}/reject:
+    post:
+      tags: [Workflow]
+      summary: Rejeter un thème
+      description: |
+        Rejeter un thème et le remettre en brouillon (référent/direction/admin).
+        Transition: pending_review → draft
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: themeId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - comment
+              properties:
+                comment:
+                  type: string
+                  description: Motif du rejet (obligatoire)
+      responses:
+        '200':
+          description: Thème rejeté
+        '400':
+          description: Commentaire manquant ou erreur
+        '403':
+          description: Rôle référent requis
+
+  /api/workflow/themes/{themeId}/publish:
+    post:
+      tags: [Workflow]
+      summary: Publier un thème approuvé
+      description: |
+        Publier un thème approuvé (direction/admin uniquement).
+        Transition: approved → published
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: themeId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Thème publié
+        '403':
+          description: Rôle direction requis
+
+  /api/workflow/themes/{themeId}/history:
+    get:
+      tags: [Workflow]
+      summary: Historique du workflow d'un thème
+      description: Récupère l'historique complet des changements de statut
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: themeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Historique récupéré
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  theme_id:
+                    type: string
+                  history:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkflowHistoryEntry'
+
+  /api/workflow/pending:
+    get:
+      tags: [Workflow]
+      summary: Thèmes en attente de validation
+      description: Liste tous les thèmes en statut 'pending_review' pour le tenant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Liste des thèmes en attente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  themes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ThemeWorkflowSummary'
+                  count:
+                    type: integer
+
+  /api/workflow/my-reviews:
+    get:
+      tags: [Workflow]
+      summary: Mes revues assignées
+      description: Liste des thèmes assignés à l'utilisateur connecté pour revue
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Liste des revues assignées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  reviews:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReviewAssignment'
+
+  /api/workflow/themes/{themeId}/assign-reviewer:
+    post:
+      tags: [Workflow]
+      summary: Assigner un référent à la revue d'un thème
+      description: Affecter un référent spécifique pour réviser un thème (direction/admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: themeId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reviewer_id
+              properties:
+                reviewer_id:
+                  type: string
+                priority:
+                  type: string
+                  enum: [low, normal, high, urgent]
+                  default: normal
+                due_date:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Référent assigné
+        '403':
+          description: Rôle direction requis
+
+  /api/workflow/notifications:
+    get:
+      tags: [Workflow]
+      summary: Notifications de l'utilisateur
+      description: Récupère les notifications de workflow pour l'utilisateur connecté
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Liste des notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkflowNotification'
+
+  # ============================================================
+  # ANNOTATIONS ENDPOINTS
+  # ============================================================
+
+  /api/annotations:
+    post:
+      tags: [Annotations]
+      summary: Créer une annotation
+      description: Ajouter une annotation sur un élément spécifique du JSON d'un thème
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnotationCreate'
+      responses:
+        '201':
+          description: Annotation créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  annotation_id:
+                    type: string
+                  annotation:
+                    $ref: '#/components/schemas/Annotation'
+        '400':
+          description: Données invalides
+
+  /api/annotations/{annotationId}:
+    get:
+      tags: [Annotations]
+      summary: Récupérer une annotation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: annotationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Annotation récupérée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  annotation:
+                    $ref: '#/components/schemas/Annotation'
+
+    put:
+      tags: [Annotations]
+      summary: Mettre à jour une annotation
+      description: Seul l'auteur peut modifier son annotation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: annotationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                annotation_type:
+                  type: string
+                  enum: [comment, suggestion, error, warning, info]
+      responses:
+        '200':
+          description: Annotation mise à jour
+        '403':
+          description: Seul l'auteur peut modifier
+
+    delete:
+      tags: [Annotations]
+      summary: Supprimer une annotation
+      description: Seul l'auteur ou un admin peut supprimer
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: annotationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Annotation supprimée
+        '403':
+          description: Permissions insuffisantes
+
+  /api/annotations/{annotationId}/resolve:
+    patch:
+      tags: [Annotations]
+      summary: Résoudre une annotation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: annotationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Annotation résolue
+
+  /api/annotations/{annotationId}/reject:
+    patch:
+      tags: [Annotations]
+      summary: Rejeter une annotation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: annotationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Annotation rejetée
+
+  /api/annotations/{annotationId}/ai-suggestion:
+    post:
+      tags: [Annotations]
+      summary: Générer une suggestion IA pour une annotation
+      description: Utilise l'IA pour proposer une correction basée sur l'annotation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: annotationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                context:
+                  type: object
+                  description: Contexte additionnel pour l'IA
+      responses:
+        '200':
+          description: Suggestion générée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  suggestion:
+                    type: string
+
+  /api/annotations/themes/{themeId}:
+    get:
+      tags: [Annotations]
+      summary: Annotations d'un thème
+      description: Liste toutes les annotations d'un thème avec filtres optionnels
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: themeId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, resolved, rejected]
+        - name: annotation_type
+          in: query
+          schema:
+            type: string
+            enum: [comment, suggestion, error, warning, info]
+        - name: theme_version
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Liste des annotations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  theme_id:
+                    type: string
+                  annotations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Annotation'
+                  count:
+                    type: integer
+
+  /api/annotations/themes/{themeId}/stats:
+    get:
+      tags: [Annotations]
+      summary: Statistiques des annotations d'un thème
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: themeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Statistiques
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  stats:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      open_count:
+                        type: integer
+                      resolved_count:
+                        type: integer
+                      by_status:
+                        type: object
+                      by_type:
+                        type: object
+
+  # ============================================================
+  # VERSIONS ENDPOINTS
+  # ============================================================
+
+  /api/versions/themes/{themeId}:
+    get:
+      tags: [Versions]
+      summary: Historique des versions d'un thème
+      description: Liste toutes les versions d'un thème
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: themeId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: milestones_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Liste des versions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  versions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ThemeVersion'
+
+  /api/versions/{versionId}:
+    get:
+      tags: [Versions]
+      summary: Détails d'une version
+      description: Récupère une version spécifique avec son contenu complet
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Détails de la version
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  version:
+                    $ref: '#/components/schemas/ThemeVersionDetailed'
+
+  /api/versions/compare:
+    get:
+      tags: [Versions]
+      summary: Comparer deux versions
+      description: Génère un diff entre deux versions d'un thème
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: version1
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID de la première version (ancienne)
+        - name: version2
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID de la deuxième version (récente)
+      responses:
+        '200':
+          description: Diff généré
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionDiff'
+        '400':
+          description: Versions invalides ou non du même thème
+
+  /api/versions/{versionId}/restore:
+    post:
+      tags: [Versions]
+      summary: Restaurer une version
+      description: |
+        Restaure une version antérieure d'un thème.
+        Crée une nouvelle version avec le contenu restauré.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Version restaurée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  theme_id:
+                    type: string
+                  restored_from_version:
+                    type: integer
+                  new_version:
+                    type: integer
+        '403':
+          description: Permissions insuffisantes
+
+# ============================================================
+# COMPONENTS
+# ============================================================
+
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Identifiant du tenant
+
+  schemas:
+    WorkflowTransitionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        theme_id:
+          type: string
+        previous_status:
+          type: string
+        new_status:
+          type: string
+        comment:
+          type: string
+
+    WorkflowHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        theme_id:
+          type: string
+        status_from:
+          type: string
+          enum: [draft, pending_review, approved, published, archived]
+        status_to:
+          type: string
+          enum: [draft, pending_review, approved, published, archived]
+        actor_user_id:
+          type: string
+        actor_firstname:
+          type: string
+        actor_lastname:
+          type: string
+        actor_role:
+          type: string
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ThemeWorkflowSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+        author_firstname:
+          type: string
+        author_lastname:
+          type: string
+        open_annotations:
+          type: integer
+
+    ReviewAssignment:
+      type: object
+      properties:
+        id:
+          type: string
+        theme_id:
+          type: string
+        theme_title:
+          type: string
+        theme_status:
+          type: string
+        priority:
+          type: string
+          enum: [low, normal, high, urgent]
+        due_date:
+          type: string
+          format: date-time
+        assigned_by_firstname:
+          type: string
+        assigned_by_lastname:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, completed, declined]
+
+    WorkflowNotification:
+      type: object
+      properties:
+        id:
+          type: string
+        theme_id:
+          type: string
+        notification_type:
+          type: string
+          enum: [status_change, new_annotation, review_assigned, review_completed, publish_request]
+        title:
+          type: string
+        message:
+          type: string
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+
+    AnnotationCreate:
+      type: object
+      required:
+        - theme_id
+        - json_path
+        - content
+      properties:
+        theme_id:
+          type: string
+        json_path:
+          type: string
+          description: Chemin JSON vers l'élément annoté (ex: "questions[0].text")
+        annotation_type:
+          type: string
+          enum: [comment, suggestion, error, warning, info]
+          default: comment
+        content:
+          type: string
+        theme_version:
+          type: integer
+
+    Annotation:
+      type: object
+      properties:
+        id:
+          type: string
+        theme_id:
+          type: string
+        theme_version:
+          type: integer
+        author_user_id:
+          type: string
+        author_firstname:
+          type: string
+        author_lastname:
+          type: string
+        author_role:
+          type: string
+        json_path:
+          type: string
+        annotation_type:
+          type: string
+        content:
+          type: string
+        ai_suggestion:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [open, resolved, rejected]
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+        resolved_by:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ThemeVersion:
+      type: object
+      properties:
+        id:
+          type: string
+        version:
+          type: integer
+        title:
+          type: string
+        status:
+          type: string
+        is_milestone:
+          type: boolean
+        change_summary:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        created_by_firstname:
+          type: string
+        created_by_lastname:
+          type: string
+        data_size:
+          type: integer
+          description: Taille des données en octets
+
+    ThemeVersionDetailed:
+      allOf:
+        - $ref: '#/components/schemas/ThemeVersion'
+        - type: object
+          properties:
+            data:
+              type: object
+              description: Contenu complet du thème à cette version
+            diff_metadata:
+              type: object
+              nullable: true
+
+    VersionDiff:
+      type: object
+      properties:
+        success:
+          type: boolean
+        version1:
+          type: object
+          properties:
+            id:
+              type: string
+            version:
+              type: integer
+            title:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+        version2:
+          type: object
+          properties:
+            id:
+              type: string
+            version:
+              type: integer
+            title:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+        diff:
+          type: object
+          properties:
+            changes:
+              type: object
+              properties:
+                added:
+                  type: array
+                  items:
+                    type: object
+                removed:
+                  type: array
+                  items:
+                    type: object
+                modified:
+                  type: array
+                  items:
+                    type: object
+            total_changes:
+              type: integer
+            has_changes:
+              type: boolean
+
+  responses:
+    Unauthorized:
+      description: Non authentifié ou token invalide
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Unauthorized"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
