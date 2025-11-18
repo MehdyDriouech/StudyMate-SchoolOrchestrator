@@ -12,7 +12,7 @@ import { setActiveSchoolId, getActiveSchoolId } from './features/features-contro
 import { needsSidebar, getSidebarItems, getParentRoute } from './components/NavigationManager.js';
 import { renderSidebar, removeSidebar } from './components/Sidebar.js';
 import { loadSavedTheme } from './components/UserMenu.js';
-import { showOnboardingModal, shouldShowOnboarding } from './components/OnboardingModal.js';
+import { showOnboardingModal, shouldShowOnboarding, showRoleOnboardingModal, shouldShowRoleOnboarding } from './components/OnboardingModal.js';
 
 // État global de l'application
 export const AppState = {
@@ -411,6 +411,8 @@ function renderViewContent(viewContainer, viewName, viewId, queryParams = null) 
       if (result instanceof Promise) {
         result.then(() => {
           console.log(`[Router] Fonction async ${renderFunctionName} terminée, innerHTML length:`, viewContainer.innerHTML.length);
+          // Vérifier si on doit afficher l'onboarding après le rendu d'un dashboard
+          checkAndShowRoleOnboarding(viewName);
         }).catch(error => {
           console.error(`[Router] Erreur dans la fonction async ${renderFunctionName}:`, error);
           viewContainer.innerHTML = `
@@ -424,6 +426,8 @@ function renderViewContent(viewContainer, viewName, viewId, queryParams = null) 
         });
       } else {
         console.log(`[Router] Fonction ${renderFunctionName} terminée (sync), innerHTML length:`, viewContainer.innerHTML.length);
+        // Vérifier si on doit afficher l'onboarding après le rendu d'un dashboard
+        checkAndShowRoleOnboarding(viewName);
       }
     } else {
       console.warn(`[Router] Fonction de rendu non trouvée pour: ${viewName}`);
@@ -446,6 +450,51 @@ function renderViewContent(viewContainer, viewName, viewId, queryParams = null) 
         </p>
       </div>
     `;
+  }
+}
+
+// Flag pour éviter les appels multiples
+let onboardingCheckInProgress = false;
+
+/**
+ * Vérifie et affiche l'onboarding spécifique au rôle si nécessaire
+ * @param {string} viewName - Nom de la vue
+ */
+function checkAndShowRoleOnboarding(viewName) {
+  // Vérifier si c'est un dashboard
+  const dashboardViews = ['dashboard-teacher', 'dashboard-student', 'dashboard-director', 'dashboard-pedago'];
+  if (!dashboardViews.includes(viewName)) {
+    return;
+  }
+  
+  // Éviter les appels multiples
+  if (onboardingCheckInProgress) {
+    console.log('[App] Vérification d\'onboarding déjà en cours, ignore');
+    return;
+  }
+  
+  // Récupérer le rôle de l'utilisateur
+  const userRole = getUserRole();
+  if (!userRole) {
+    return;
+  }
+  
+  // Vérifier si la modale est déjà affichée
+  const existingModal = document.getElementById('role-onboarding-modal');
+  if (existingModal) {
+    console.log('[App] Modale d\'onboarding déjà affichée, ignore');
+    return;
+  }
+  
+  // Vérifier si l'onboarding doit être affiché pour ce rôle
+  if (shouldShowRoleOnboarding(userRole)) {
+    onboardingCheckInProgress = true;
+    console.log(`[App] Affichage de l'onboarding pour le rôle: ${userRole}`);
+    // Attendre un peu pour que le dashboard soit complètement rendu
+    setTimeout(() => {
+      showRoleOnboardingModal(userRole);
+      onboardingCheckInProgress = false;
+    }, 500);
   }
 }
 
@@ -604,18 +653,11 @@ function initApp() {
       navigateTo(dashboardRoute);
     }
   } else {
-    // Pas d'authentification, vérifier si on doit afficher la modale d'onboarding
-    if (shouldShowOnboarding()) {
-      console.log('[App] Affichage de la modale d\'onboarding');
-      // Afficher la modale d'onboarding
-      setTimeout(() => {
-        showOnboardingModal();
-      }, 300);
-    } else {
-      // Afficher l'écran d'auth
-      console.log('[App] Pas d\'authentification, affichage de l\'écran de connexion');
-      navigateTo('auth');
-    }
+    // Pas d'authentification, afficher l'écran d'auth
+    // L'onboarding de sélection de persona ne s'affiche plus ici
+    // Il sera affiché après le login dans le dashboard approprié
+    console.log('[App] Pas d\'authentification, affichage de l\'écran de connexion');
+    navigateTo('auth');
   }
   
   // Écouter les changements d'établissement pour recharger la vue actuelle
