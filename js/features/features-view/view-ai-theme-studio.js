@@ -15,6 +15,8 @@ import {
   publishThemeForClass,
   getCurrentThemeAssignments
 } from '../features-control/feature-ai-theme-studio.js';
+import { renderAiThemeImportView } from './view-ai-theme-import.js';
+import { getActiveTab, setActiveTab } from '../features-control/store-ai-theme-studio.js';
 import { navigateTo } from '../../app.js';
 
 let viewContainer = null;
@@ -25,13 +27,32 @@ let uiState = {
 };
 let classesCache = getAvailableClasses();
 
-export function renderAiThemeStudioView(container) {
+export function renderAiThemeStudioView(container, route = null, queryParams = null) {
   viewContainer = container;
   classesCache = getAvailableClasses();
+  
+  // Déterminer l'onglet actif depuis les query params ou le store
+  let activeTab = 'manual';
+  if (queryParams && queryParams.tab) {
+    activeTab = queryParams.tab === 'pdf' ? 'pdf' : 'manual';
+  } else {
+    activeTab = getActiveTab();
+  }
+  
+  // Mettre à jour le store
+  setActiveTab(activeTab);
+  
+  // Si on est sur l'onglet PDF, rendre la vue d'import
+  if (activeTab === 'pdf') {
+    renderAiThemeImportView(container);
+    return;
+  }
+  
+  // Sinon, rendre la vue de création manuelle
   const theme = getCurrentTheme();
-
   container.innerHTML = getBaseTemplate(theme);
 
+  bindTabSwitchers();
   bindStepOneInputs(theme);
   bindContentTypeInputs(theme);
   bindGenerateButton();
@@ -44,7 +65,25 @@ export function renderAiThemeStudioView(container) {
   renderAssignmentsList();
 }
 
+function bindTabSwitchers() {
+  const tabButtons = viewContainer.querySelectorAll('.ai-theme-tab-main');
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      if (tab === 'pdf') {
+        // Naviguer vers l'onglet PDF avec le paramètre tab
+        navigateTo('teacher-content/studio?tab=pdf');
+      } else {
+        // Naviguer vers l'onglet manuel
+        navigateTo('teacher-content/studio?tab=manual');
+      }
+    });
+  });
+}
+
 function getBaseTemplate(theme) {
+  const activeTab = getActiveTab();
+  
   return `
     <div class="ai-theme-studio" style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
       <div class="card" style="margin-bottom: 20px; background: linear-gradient(120deg, rgba(14,165,233,0.12), rgba(59,130,246,0.12)); border: 1px solid rgba(14,165,233,0.4);">
@@ -57,6 +96,17 @@ function getBaseTemplate(theme) {
           </p>
         </div>
       </div>
+
+      <div class="card" style="margin-bottom: 20px; padding: 0;">
+        <div class="ai-theme-tabs-main" style="display: flex; gap: 8px; border-bottom: 1px solid rgba(148,163,184,0.3); padding: 0 16px;">
+          <button class="ai-theme-tab-main ${activeTab === 'manual' ? 'active' : ''}" data-tab="manual" style="padding: 12px 16px; border: none; background: transparent; cursor: pointer; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px;">
+            ✏️ Création manuelle
+          </button>
+          <button class="ai-theme-tab-main ${activeTab === 'pdf' ? 'active' : ''}" data-tab="pdf" style="padding: 12px 16px; border: none; background: transparent; cursor: pointer; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px;">
+            📄 Importer un PDF
+          </button>
+        </div>
+        <div id="ai-theme-tab-content" style="padding: 0;">
 
       <div class="ai-theme-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px;">
         <div class="card" id="ai-theme-step1">
@@ -202,6 +252,8 @@ function getBaseTemplate(theme) {
         <p style="color: var(--muted); margin-bottom: 12px;">Les thèmes sauvegardés apparaissent ici (stockage en mémoire uniquement).</p>
         <div id="ai-theme-saved-list"></div>
       </div>
+        </div>
+      </div>
     </div>
 
     <style>
@@ -225,6 +277,10 @@ function getBaseTemplate(theme) {
       .ai-theme-choice input[type="text"] { flex: 1; }
       .ai-theme-saved-item { padding: 8px 0; border-bottom: 1px solid rgba(148,163,184,0.3); }
       .ai-theme-saved-item:last-child { border-bottom: none; }
+      .ai-theme-tabs-main { display: flex; gap: 8px; }
+      .ai-theme-tab-main { padding: 12px 16px; border: none; background: transparent; cursor: pointer; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+      .ai-theme-tab-main:hover { color: var(--accent); }
+      .ai-theme-tab-main.active { color: var(--accent); border-bottom-color: var(--accent); }
       @media (max-width: 640px) {
         #ai-theme-editor-card { padding: 16px; }
       }

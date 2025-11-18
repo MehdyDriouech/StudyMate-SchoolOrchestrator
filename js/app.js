@@ -106,14 +106,71 @@ const VIEW_PERMISSIONS = {
  * @param {boolean} skipAuthCheck - Si true, ignore la vérification d'authentification (pour la navigation après login)
  */
 export function navigateTo(viewName, skipAuthCheck = false, queryParams = null) {
-  console.log(`[Router] Navigation vers: ${viewName} (skipAuthCheck: ${skipAuthCheck})`);
+  console.log(`[Router] Navigation vers: ${viewName} (skipAuthCheck: ${skipAuthCheck}, queryParams:`, queryParams, ')');
   console.log(`[Router] isAuthenticated():`, isAuthenticated());
-  console.log(`[Router] getUserRole():`, getUserRole());
+  const userRole = getUserRole();
+  console.log(`[Router] getUserRole():`, userRole);
   
-  // Vérifier si on est déjà sur cette vue ou une sous-route de la même route parente
-  if (AppState.currentView === viewName) {
-    console.log('[Router] Déjà sur cette vue, navigation ignorée');
+  // Construire le hash complet pour comparer
+  let hash = viewName;
+  if (queryParams && typeof queryParams === 'object') {
+    const params = new URLSearchParams();
+    Object.keys(queryParams).forEach(key => {
+      if (queryParams[key] !== null && queryParams[key] !== undefined) {
+        params.append(key, queryParams[key]);
+      }
+    });
+    const queryString = params.toString();
+    if (queryString) {
+      hash = `${viewName}?${queryString}`;
+    }
+  }
+  
+  // Flag pour forcer le re-rendu même si c'est la même vue
+  let forceRerender = false;
+  
+  // Si on essaie de naviguer vers une route parente alors qu'on est déjà sur une sous-route,
+  // rediriger vers la première sous-route (cela évitera le double clic)
+  // Cette vérification doit être faite AVANT la comparaison avec currentHash
+  if (userRole && !viewName.includes('/') && AppState.currentView && AppState.currentView.includes('/')) {
+    const currentParent = AppState.currentView.split('/')[0];
+    if (currentParent === viewName) {
+      const needsSidebarForRoute = needsSidebar(userRole, viewName);
+      if (needsSidebarForRoute) {
+        const sidebarItems = getSidebarItems(userRole, viewName);
+        if (sidebarItems && sidebarItems.length > 0) {
+          const firstSubRoute = sidebarItems[0]?.route;
+          if (firstSubRoute) {
+            // Si on est déjà sur la première sous-route, forcer le re-rendu
+            if (AppState.currentView === firstSubRoute) {
+              console.log('[Router] Déjà sur la première sous-route, forcer le re-rendu');
+              // Forcer le re-rendu avec la sous-route
+              viewName = firstSubRoute;
+              hash = firstSubRoute + (queryParams && Object.keys(queryParams).length > 0 ? '?' + new URLSearchParams(queryParams).toString() : '');
+              forceRerender = true;
+            } else {
+              // Naviguer vers la première sous-route
+              console.log('[Router] Redirection depuis route parente vers première sous-route:', firstSubRoute);
+              navigateTo(firstSubRoute, skipAuthCheck, queryParams);
+              return;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Vérifier si on est déjà sur cette vue avec les mêmes query params
+  const currentHash = window.location.hash.slice(1);
+  if (AppState.currentView === viewName && currentHash === hash && !forceRerender) {
+    console.log('[Router] Déjà sur cette vue avec les mêmes paramètres, navigation ignorée');
     return;
+  }
+  
+  // Si on est sur la même vue mais avec des query params différents, forcer le re-rendu
+  if (AppState.currentView === viewName && currentHash !== hash) {
+    console.log('[Router] Même vue mais query params différents, re-rendu forcé');
+    // Continuer pour forcer le re-rendu
   }
   
   // Vérifier que la vue existe (ou est une route parent/child)
@@ -133,7 +190,6 @@ export function navigateTo(viewName, skipAuthCheck = false, queryParams = null) 
   // Vérifier les permissions spécifiques
   const allowedRoles = VIEW_PERMISSIONS[viewName];
   if (allowedRoles) {
-    const userRole = getUserRole();
     if (!userRole || !allowedRoles.includes(userRole)) {
       console.warn('[Router] Accès refusé pour la vue', viewName);
       const fallback = userRole ? getDashboardRoute(userRole) : 'auth';
@@ -142,30 +198,34 @@ export function navigateTo(viewName, skipAuthCheck = false, queryParams = null) 
     }
   }
   
-  // Mettre à jour l'état
-  AppState.currentView = viewName;
-  
-  // Construire le hash avec les paramètres de requête si fournis
-  let hash = viewName;
-  if (queryParams && typeof queryParams === 'object') {
-    const params = new URLSearchParams();
-    Object.keys(queryParams).forEach(key => {
-      if (queryParams[key] !== null && queryParams[key] !== undefined) {
-        params.append(key, queryParams[key]);
+  // Si cette vue nécessite une sidebar et qu'on est sur une route parente sans sous-route,
+  // rediriger immédiatement vers la première sous-route
+  if (userRole && !viewName.includes('/')) {
+    const needsSidebarForRoute = needsSidebar(userRole, viewName);
+    if (needsSidebarForRoute) {
+      const sidebarItems = getSidebarItems(userRole, viewName);
+      if (sidebarItems && sidebarItems.length > 0) {
+        const firstSubRoute = sidebarItems[0]?.route;
+        if (firstSubRoute) {
+          console.log('[Router] Redirection vers la première sous-route:', firstSubRoute);
+          // Naviguer vers la première sous-route avec les mêmes query params
+          navigateTo(firstSubRoute, skipAuthCheck, queryParams);
+          return;
+        }
       }
-    });
-    const queryString = params.toString();
-    if (queryString) {
-      hash = `${viewName}?${queryString}`;
     }
   }
   
+  // Mettre à jour l'état
+  AppState.currentView = viewName;
+  
   // Rendre la vue immédiatement (avant de mettre à jour le hash pour éviter les conflits)
-  renderView(viewName);
+  // Passer les query params à renderView
+  renderView(viewName, queryParams);
   
   // Mettre à jour le hash (pour l'historique navigateur)
   // Ne mettre à jour le hash que si nécessaire pour éviter de déclencher hashchange inutilement
-  const currentHash = window.location.hash.slice(1);
+  // Réutiliser currentHash déjà déclaré plus haut
   if (currentHash !== hash) {
     // Utiliser replaceState pour éviter d'ajouter une entrée dans l'historique
     // et pour éviter de déclencher hashchange (mais ça ne fonctionne pas avec hash)
@@ -181,8 +241,9 @@ export function navigateTo(viewName, skipAuthCheck = false, queryParams = null) 
 /**
  * Rend la vue dans le conteneur principal
  * @param {string} viewName - Nom de la vue
+ * @param {object|null} queryParams - Paramètres de requête optionnels
  */
-function renderView(viewName) {
+function renderView(viewName, queryParams = null) {
   const appRoot = document.getElementById('app-root');
   if (!appRoot) {
     console.error('[Router] Conteneur app-root introuvable');
@@ -194,17 +255,8 @@ function renderView(viewName) {
   
   const userRole = getUserRole();
   
-  // Si on clique sur une route parente alors qu'on est déjà sur une sous-route de cette famille,
-  // utiliser la sous-route actuelle pour le rendu
+  // Utiliser le viewName tel quel (pas de logique pour garder la sous-route actuelle)
   let actualViewName = viewName;
-  if (!viewName.includes('/') && AppState.currentView && AppState.currentView.includes('/')) {
-    const currentParent = AppState.currentView.split('/')[0];
-    if (currentParent === viewName) {
-      // On est déjà sur une sous-route de cette route parente, utiliser la sous-route actuelle
-      actualViewName = AppState.currentView;
-      console.log('[Router] Utilisation de la sous-route actuelle:', actualViewName);
-    }
-  }
   
   // Déterminer si cette route (ou la sous-route actuelle) nécessite une sidebar
   const needsSidebarForRoute = userRole && needsSidebar(userRole, actualViewName);
@@ -264,8 +316,8 @@ function renderView(viewName) {
     // Rendre la sidebar (utiliser actualViewName pour l'item actif)
     renderSidebar(sidebarContainer, sidebarItems, actualViewName, parentRoute);
     
-    // Rendre la vue (utiliser actualViewName pour le rendu)
-    renderViewContent(viewContainer, actualViewName, viewId);
+    // Rendre la vue (utiliser actualViewName pour le rendu, passer les query params)
+    renderViewContent(viewContainer, actualViewName, viewId, queryParams);
   } else {
     // Pas de sidebar, rendu classique
     const viewContainer = document.createElement('div');
@@ -273,7 +325,7 @@ function renderView(viewName) {
     viewContainer.className = 'view-container';
     appRoot.appendChild(viewContainer);
     
-    renderViewContent(viewContainer, viewName, viewId);
+    renderViewContent(viewContainer, viewName, viewId, queryParams);
   }
 }
 
@@ -282,8 +334,9 @@ function renderView(viewName) {
  * @param {HTMLElement} viewContainer - Conteneur de la vue
  * @param {string} viewName - Nom de la route
  * @param {string} viewId - ID de la vue
+ * @param {object|null} queryParams - Paramètres de requête optionnels
  */
-function renderViewContent(viewContainer, viewName, viewId) {
+function renderViewContent(viewContainer, viewName, viewId, queryParams = null) {
   // Appeler la fonction de rendu de la vue
   try {
     // Pour les routes parent/child, essayer d'abord la route exacte, puis la route parente
@@ -308,7 +361,7 @@ function renderViewContent(viewContainer, viewName, viewId) {
           renderFunction = window[renderFunctionName];
           if (typeof renderFunction === 'function') {
             console.log(`[Router] Fonction ${renderFunctionName} trouvée après délai, rendu de la vue`);
-            const result = renderFunction(viewContainer, viewName);
+            const result = renderFunction(viewContainer, viewName, queryParams);
             if (result instanceof Promise) {
               result.catch(error => {
                 console.error(`[Router] Erreur dans la fonction async ${renderFunctionName}:`, error);
@@ -321,8 +374,8 @@ function renderViewContent(viewContainer, viewName, viewId) {
     }
     
     if (typeof renderFunction === 'function') {
-      // Gérer les fonctions async
-      const result = renderFunction(viewContainer, viewName);
+      // Gérer les fonctions async, passer les query params
+      const result = renderFunction(viewContainer, viewName, queryParams);
       if (result instanceof Promise) {
         result.catch(error => {
           console.error(`[Router] Erreur dans la fonction async ${renderFunctionName}:`, error);
@@ -428,30 +481,16 @@ function initApp() {
       return;
     }
     
-    const hash = window.location.hash.slice(1); // Enlever le #
+    const currentHashFull = window.location.hash.slice(1); // Enlever le #
     
     // Extraire le nom de la vue (avant le ?)
-    const viewName = hash.split('?')[0];
+    const viewName = currentHashFull.split('?')[0];
     
-    // Si on est déjà sur cette vue, ne rien faire
-    if (AppState.currentView === viewName) {
-      console.log('[Router] Déjà sur la vue', viewName);
-      return;
-    }
+    // Note: On ne peut pas vraiment comparer avec l'ancien hash car il n'est pas stocké
+    // La logique ci-dessous gère le cas où on est sur la même vue
     
-    // Vérifier si on est sur une sous-route de la même route parente
-    // Si on clique sur la route parente alors qu'on est déjà sur une sous-route, rendre la vue actuelle
-    if (AppState.currentView && AppState.currentView.includes('/')) {
-      const currentParent = AppState.currentView.split('/')[0];
-      if (currentParent === viewName) {
-        // On est déjà sur une sous-route de cette route parente
-        // Rendre la vue actuelle (renderView utilisera AppState.currentView pour détecter la sous-route)
-        console.log('[Router] Déjà sur une sous-route de', viewName, '- rendu de la vue actuelle', AppState.currentView);
-        // Ne pas mettre à jour AppState.currentView, garder la sous-route actuelle
-        renderView(viewName);
-        return;
-      }
-    }
+    // Note: La gestion de la redirection vers la première sous-route est maintenant
+    // gérée dans navigateTo() pour éviter les conflits et les doubles clics
     
     // Si l'utilisateur est authentifié mais qu'on essaie d'aller sur auth, rediriger vers le dashboard
     if (viewName === 'auth' && isAuthenticated()) {
@@ -471,9 +510,17 @@ function initApp() {
     
     if (viewName && VIEWS[viewName]) {
       // Extraire les paramètres de requête si présents
-      const queryString = hash.includes('?') ? hash.split('?')[1] : null;
+      const queryString = currentHashFull.includes('?') ? currentHashFull.split('?')[1] : null;
       const queryParams = queryString ? Object.fromEntries(new URLSearchParams(queryString)) : null;
-      navigateTo(viewName, false, queryParams);
+      
+      // Si c'est la même vue mais avec des query params différents, forcer le re-rendu
+      if (AppState.currentView === viewName) {
+        console.log('[Router] Forcer le re-rendu avec les nouveaux query params');
+        renderView(viewName, queryParams);
+        AppState.currentView = viewName;
+      } else {
+        navigateTo(viewName, false, queryParams);
+      }
     } else if (!viewName && isAuthenticated()) {
       // Pas de hash mais utilisateur authentifié, rediriger vers le dashboard
       const userRole = getUserRole();
@@ -481,7 +528,7 @@ function initApp() {
         const dashboardRoute = getDashboardRoute(userRole);
         navigateTo(dashboardRoute, true);
       }
-    } else if (!hash && !isAuthenticated()) {
+    } else if (!currentHashFull && !isAuthenticated()) {
       // Pas de hash et pas authentifié, aller vers auth
       navigateTo('auth');
     }

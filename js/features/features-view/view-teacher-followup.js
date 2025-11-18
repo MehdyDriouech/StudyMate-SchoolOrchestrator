@@ -49,9 +49,18 @@ export function renderTeacherFollowupView(container, route = 'teacher-followup')
  */
 export function renderTeacherFollowupSocialView(container) {
   const classes = getClasses();
-  const firstClass = classes[0];
   
-  if (!firstClass) {
+  // Récupérer la classe sélectionnée depuis le localStorage
+  const savedClassId = localStorage.getItem('SM_SO_SELECTED_CLASS_ID');
+  let selectedClassId = null;
+  if (savedClassId && classes.find(c => c.id === savedClassId)) {
+    selectedClassId = savedClassId;
+  } else if (classes.length > 0) {
+    selectedClassId = classes[0].id;
+    localStorage.setItem('SM_SO_SELECTED_CLASS_ID', selectedClassId);
+  }
+  
+  if (!selectedClassId || classes.length === 0) {
     container.innerHTML = `
       <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center;">
         <div style="font-size: 3rem; margin-bottom: 16px;">📊</div>
@@ -64,18 +73,53 @@ export function renderTeacherFollowupSocialView(container) {
     return;
   }
   
+  // Utiliser les stats sociales (pour l'instant, les fonctions ne filtrent pas encore par classe)
   const dynamics = getClassSocialDynamics();
   const leaderboard = getClassSocialLeaderboard().filter(student => student.name !== 'Moi');
   
   container.innerHTML = `
     <div style="width: 100%; max-width: 100%; margin: 0; padding: 24px 32px; box-sizing: border-box;">
-      <div style="margin-bottom: 32px;">
-        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
-          📊 Analytics / Social Classe
-        </h1>
-        <p style="color: var(--muted); font-size: 1.05rem;">
-          Analyse de la dynamique sociale et des performances de votre classe
-        </p>
+      <div style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div style="flex: 1; min-width: 200px;">
+          <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
+            📊 Analytics / Social Classe
+          </h1>
+          <p style="color: var(--muted); font-size: 1.05rem;">
+            Analyse de la dynamique sociale et des performances de votre classe
+          </p>
+        </div>
+        ${classes.length > 1 ? `
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <label for="class-selector-social" style="font-weight: 600; color: var(--fg); white-space: nowrap;">
+              Classe :
+            </label>
+            <select 
+              id="class-selector-social" 
+              style="
+                padding: 10px 16px;
+                border-radius: var(--radius-md);
+                border: 1px solid var(--card-border);
+                background: var(--card);
+                color: var(--fg);
+                font-size: 1rem;
+                font-family: inherit;
+                cursor: pointer;
+                min-width: 250px;
+                transition: all var(--transition-base);
+              "
+              onmouseover="this.style.borderColor='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--card-border)'"
+              onfocus="this.style.borderColor='var(--accent)'; this.style.outline='2px solid var(--accent)'; this.style.outlineOffset='2px'"
+              onblur="this.style.borderColor='var(--card-border)'; this.style.outline='none'"
+            >
+              ${classes.map(c => `
+                <option value="${c.id}" ${c.id === selectedClassId ? 'selected' : ''}>
+                  ${c.name || c.id}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+        ` : ''}
       </div>
       
       <!-- Statistiques principales -->
@@ -156,6 +200,19 @@ export function renderTeacherFollowupSocialView(container) {
       </div>
     </div>
   `;
+  
+  // Event listener pour le sélecteur de classe
+  if (classes.length > 1) {
+    const classSelector = container.querySelector('#class-selector-social');
+    if (classSelector) {
+      classSelector.addEventListener('change', (e) => {
+        const selectedClassId = e.target.value;
+        localStorage.setItem('SM_SO_SELECTED_CLASS_ID', selectedClassId);
+        // Re-rendre la vue avec la nouvelle classe
+        renderTeacherFollowupSocialView(container);
+      });
+    }
+  }
 }
 
 function getRankColor(rank) {

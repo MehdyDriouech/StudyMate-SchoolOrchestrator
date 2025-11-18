@@ -17,16 +17,23 @@ import { navigateTo } from '../../app.js';
 export function renderTeacherContentView(container, route = 'teacher-content') {
   console.log('[View Teacher Content] Rendu des contenus, route:', route);
   
-  const subRoute = getSubRoute(route);
+  // Nettoyer la route en enlevant les query params avant d'extraire la sous-route
+  const cleanRoute = route.includes('?') ? route.split('?')[0] : route;
+  const subRoute = getSubRoute(cleanRoute);
   
   // Si pas de sous-route, rendre directement la première (studio) au lieu de rediriger
   // La redirection est gérée dans app.js pour éviter les boucles
   const routeToRender = subRoute || 'studio';
   
+  // Extraire les query params depuis l'URL
+  const hash = window.location.hash.slice(1);
+  const queryString = hash.includes('?') ? hash.split('?')[1] : null;
+  const queryParams = queryString ? Object.fromEntries(new URLSearchParams(queryString)) : null;
+  
   // Router vers la bonne vue selon la sous-route
   switch (routeToRender) {
     case 'studio':
-      renderAiThemeStudioView(container);
+      renderAiThemeStudioView(container, route, queryParams);
       break;
     case 'library':
       renderLibraryView(container);

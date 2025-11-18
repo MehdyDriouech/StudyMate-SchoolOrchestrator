@@ -10,9 +10,10 @@ import { getClasses, getActiveSchool } from './store-multischool.js';
 
 /**
  * Charge les données des soumissions pour l'enseignant
+ * @param {string} classId - ID de la classe à filtrer (optionnel)
  * @returns {Array}
  */
-export function loadSubmissionsData() {
+export function loadSubmissionsData(classId = null) {
   const currentUser = getCurrentUser();
   
   if (!currentUser || currentUser.role !== 'teacher') {
@@ -21,7 +22,15 @@ export function loadSubmissionsData() {
   }
   
   // Récupérer toutes les soumissions
-  const submissions = StudentSubmissionsStore.getSubmissionsForTeacher(currentUser.email);
+  let submissions = StudentSubmissionsStore.getSubmissionsForTeacher(currentUser.email);
+  
+  // Filtrer par classe si classId est fourni
+  if (classId) {
+    const compatibleClassId = classId.replace('class_', ''); // 'class_term_s1' -> 'terminale_s1'
+    submissions = submissions.filter(s => 
+      s.classId === classId || s.classId === compatibleClassId
+    );
+  }
   
   // Enrichir avec les informations des assignations et thèmes
   const enrichedSubmissions = submissions.map(submission => {
@@ -30,7 +39,9 @@ export function loadSubmissionsData() {
     
     // Récupérer le nom de la classe
     const activeSchool = getActiveSchool();
-    const classInfo = activeSchool?.classes?.find(c => c.id === submission.classId);
+    const classInfo = activeSchool?.classes?.find(c => 
+      c.id === submission.classId || c.id === `class_${submission.classId}`
+    );
     
     // Récupérer le nom de l'étudiant (fake pour la démo)
     const studentName = getStudentName(submission.studentId);

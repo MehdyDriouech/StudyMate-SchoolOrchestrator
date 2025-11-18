@@ -5,8 +5,11 @@
 import { loadSubmissionsData } from '../features-control/feature-teacher-submissions.js';
 import ActivityTimelineStore from '../features-control/store-timeline.js';
 import { getCurrentUser } from '../features-control/feature-auth.js';
+import { getClasses } from '../features-control/store-multischool.js';
 
 let submissionsContainer = null;
+let currentSubmissions = [];
+let sortConfig = { column: null, direction: 'asc' };
 
 /**
  * Rend la vue soumissions enseignant
@@ -41,12 +44,103 @@ export function renderTeacherSubmissionsView(container) {
  * Rend le contenu des soumissions
  */
 function renderSubmissionsContent() {
-  const submissions = loadSubmissionsData();
+  // Récupérer la classe sélectionnée depuis le localStorage
+  const savedClassId = localStorage.getItem('SM_SO_SELECTED_CLASS_ID');
+  const classes = getClasses();
+  
+  let selectedClassId = null;
+  if (savedClassId && classes.find(c => c.id === savedClassId)) {
+    selectedClassId = savedClassId;
+  } else if (classes.length > 0) {
+    selectedClassId = classes[0].id;
+    localStorage.setItem('SM_SO_SELECTED_CLASS_ID', selectedClassId);
+  }
+  
+  // Charger les soumissions filtrées par classe
+  let submissions = loadSubmissionsData(selectedClassId);
+  currentSubmissions = [...submissions];
+  
+  // Appliquer le tri si configuré
+  if (sortConfig.column) {
+    submissions = sortSubmissions(submissions, sortConfig.column, sortConfig.direction);
+  }
   
   if (!submissions || submissions.length === 0) {
     submissionsContainer.innerHTML = `
-      <div style="width: 100%; max-width: 100%; margin: 0; padding: 24px; box-sizing: border-box;">
-        <div style="margin-bottom: 32px;">
+      <div style="width: 100%; max-width: 100%; margin: 0; padding: 24px 32px; box-sizing: border-box;">
+        <div style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+          <div style="flex: 1; min-width: 200px;">
+            <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
+              📋 Rendus / Corrections
+            </h1>
+            <p style="color: var(--muted); font-size: 1.05rem;">
+              Gestion des devoirs rendus par vos élèves
+            </p>
+          </div>
+          ${classes.length > 1 ? `
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <label for="class-selector-submissions-empty" style="font-weight: 600; color: var(--fg); white-space: nowrap;">
+                Classe :
+              </label>
+              <select 
+                id="class-selector-submissions-empty" 
+                style="
+                  padding: 10px 16px;
+                  border-radius: var(--radius-md);
+                  border: 1px solid var(--card-border);
+                  background: var(--card);
+                  color: var(--fg);
+                  font-size: 1rem;
+                  font-family: inherit;
+                  cursor: pointer;
+                  min-width: 250px;
+                  transition: all var(--transition-base);
+                "
+                onmouseover="this.style.borderColor='var(--accent)'"
+                onmouseout="this.style.borderColor='var(--card-border)'"
+                onfocus="this.style.borderColor='var(--accent)'; this.style.outline='2px solid var(--accent)'; this.style.outlineOffset='2px'"
+                onblur="this.style.borderColor='var(--card-border)'; this.style.outline='none'"
+              >
+                ${classes.map(c => `
+                  <option value="${c.id}" ${c.id === selectedClassId ? 'selected' : ''}>
+                    ${c.name || c.id}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          ` : ''}
+        </div>
+        
+        <div class="card" style="text-align: center; padding: 60px 20px;">
+          <div style="font-size: 3rem; margin-bottom: 16px;">📭</div>
+          <h2 style="color: var(--muted); margin-bottom: 8px;">Aucun rendu</h2>
+          <p style="color: var(--muted);">
+            Aucun devoir n'a encore été rendu par vos élèves${selectedClassId ? ` dans cette classe` : ''}.
+          </p>
+        </div>
+      </div>
+    `;
+    
+    // Event listener pour le sélecteur de classe même quand il n'y a pas de soumissions
+    if (classes.length > 1) {
+      const classSelector = submissionsContainer.querySelector('#class-selector-submissions-empty');
+      if (classSelector) {
+        classSelector.addEventListener('change', (e) => {
+          const newSelectedClassId = e.target.value;
+          localStorage.setItem('SM_SO_SELECTED_CLASS_ID', newSelectedClassId);
+          sortConfig = { column: null, direction: 'asc' }; // Réinitialiser le tri
+          renderSubmissionsContent();
+        });
+      }
+    }
+    
+    return;
+  }
+  
+  submissionsContainer.innerHTML = `
+    <div style="width: 100%; max-width: 100%; margin: 0; padding: 24px 32px; box-sizing: border-box;">
+      <div style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div style="flex: 1; min-width: 200px;">
           <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
             📋 Rendus / Corrections
           </h1>
@@ -54,28 +148,38 @@ function renderSubmissionsContent() {
             Gestion des devoirs rendus par vos élèves
           </p>
         </div>
-        
-        <div class="card" style="text-align: center; padding: 60px 20px;">
-          <div style="font-size: 3rem; margin-bottom: 16px;">📭</div>
-          <h2 style="color: var(--muted); margin-bottom: 8px;">Aucun rendu</h2>
-          <p style="color: var(--muted);">
-            Aucun devoir n'a encore été rendu par vos élèves.
-          </p>
-        </div>
-      </div>
-    `;
-    return;
-  }
-  
-  submissionsContainer.innerHTML = `
-    <div style="width: 100%; max-width: 100%; margin: 0; padding: 24px 32px; box-sizing: border-box;">
-      <div style="margin-bottom: 32px;">
-        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
-          📋 Rendus / Corrections
-        </h1>
-        <p style="color: var(--muted); font-size: 1.05rem;">
-          Gestion des devoirs rendus par vos élèves
-        </p>
+        ${classes.length > 1 ? `
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <label for="class-selector-submissions" style="font-weight: 600; color: var(--fg); white-space: nowrap;">
+              Classe :
+            </label>
+            <select 
+              id="class-selector-submissions" 
+              style="
+                padding: 10px 16px;
+                border-radius: var(--radius-md);
+                border: 1px solid var(--card-border);
+                background: var(--card);
+                color: var(--fg);
+                font-size: 1rem;
+                font-family: inherit;
+                cursor: pointer;
+                min-width: 250px;
+                transition: all var(--transition-base);
+              "
+              onmouseover="this.style.borderColor='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--card-border)'"
+              onfocus="this.style.borderColor='var(--accent)'; this.style.outline='2px solid var(--accent)'; this.style.outlineOffset='2px'"
+              onblur="this.style.borderColor='var(--card-border)'; this.style.outline='none'"
+            >
+              ${classes.map(c => `
+                <option value="${c.id}" ${c.id === selectedClassId ? 'selected' : ''}>
+                  ${c.name || c.id}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+        ` : ''}
       </div>
       
       <div class="card">
@@ -90,11 +194,94 @@ function renderSubmissionsContent() {
             </colgroup>
             <thead>
               <tr style="border-bottom: 2px solid var(--card-border);">
-                <th style="padding: 12px; text-align: left;">Élève</th>
-                <th style="padding: 12px; text-align: left;">Thème</th>
-                <th style="padding: 12px; text-align: center;">Date rendu</th>
-                <th style="padding: 12px; text-align: center;">Score</th>
-                <th style="padding: 12px; text-align: center;">Statut</th>
+                <th style="padding: 12px; text-align: left;">
+                  <button class="sortable-header" data-sort="student" style="
+                    background: none;
+                    border: none;
+                    color: var(--fg);
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 0;
+                    font-size: inherit;
+                  ">
+                    Élève
+                    ${getSortIcon('student')}
+                  </button>
+                </th>
+                <th style="padding: 12px; text-align: left;">
+                  <button class="sortable-header" data-sort="theme" style="
+                    background: none;
+                    border: none;
+                    color: var(--fg);
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 0;
+                    font-size: inherit;
+                  ">
+                    Thème
+                    ${getSortIcon('theme')}
+                  </button>
+                </th>
+                <th style="padding: 12px; text-align: center;">
+                  <button class="sortable-header" data-sort="date" style="
+                    background: none;
+                    border: none;
+                    color: var(--fg);
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 0;
+                    font-size: inherit;
+                    margin: 0 auto;
+                  ">
+                    Date rendu
+                    ${getSortIcon('date')}
+                  </button>
+                </th>
+                <th style="padding: 12px; text-align: center;">
+                  <button class="sortable-header" data-sort="score" style="
+                    background: none;
+                    border: none;
+                    color: var(--fg);
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 0;
+                    font-size: inherit;
+                    margin: 0 auto;
+                  ">
+                    Score
+                    ${getSortIcon('score')}
+                  </button>
+                </th>
+                <th style="padding: 12px; text-align: center;">
+                  <button class="sortable-header" data-sort="status" style="
+                    background: none;
+                    border: none;
+                    color: var(--fg);
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 0;
+                    font-size: inherit;
+                    margin: 0 auto;
+                  ">
+                    Statut
+                    ${getSortIcon('status')}
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -171,6 +358,96 @@ function renderSubmissionsContent() {
       </div>
     </div>
   `;
+  
+  // Event listeners pour le sélecteur de classe
+  if (classes.length > 1) {
+    const classSelector = submissionsContainer.querySelector('#class-selector-submissions');
+    if (classSelector) {
+      classSelector.addEventListener('change', (e) => {
+        const selectedClassId = e.target.value;
+        localStorage.setItem('SM_SO_SELECTED_CLASS_ID', selectedClassId);
+        sortConfig = { column: null, direction: 'asc' }; // Réinitialiser le tri
+        renderSubmissionsContent();
+      });
+    }
+  }
+  
+  // Event listeners pour le tri
+  submissionsContainer.querySelectorAll('.sortable-header').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const column = e.currentTarget.dataset.sort;
+      if (sortConfig.column === column) {
+        // Inverser la direction si on clique sur la même colonne
+        sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        // Nouvelle colonne, tri ascendant par défaut
+        sortConfig.column = column;
+        sortConfig.direction = 'asc';
+      }
+      renderSubmissionsContent();
+    });
+  });
+}
+
+/**
+ * Trie les soumissions selon la colonne et la direction
+ * @param {Array} submissions - Liste des soumissions
+ * @param {string} column - Colonne à trier
+ * @param {string} direction - Direction du tri ('asc' ou 'desc')
+ * @returns {Array}
+ */
+function sortSubmissions(submissions, column, direction) {
+  const sorted = [...submissions];
+  
+  sorted.sort((a, b) => {
+    let comparison = 0;
+    
+    switch (column) {
+      case 'student':
+        const nameA = (a.studentName || a.studentId || '').toLowerCase();
+        const nameB = (b.studentName || b.studentId || '').toLowerCase();
+        comparison = nameA.localeCompare(nameB);
+        break;
+      case 'theme':
+        const themeA = (a.themeTitle || a.themeId || '').toLowerCase();
+        const themeB = (b.themeTitle || b.themeId || '').toLowerCase();
+        comparison = themeA.localeCompare(themeB);
+        break;
+      case 'date':
+        const dateA = new Date(a.submittedAt || 0).getTime();
+        const dateB = new Date(b.submittedAt || 0).getTime();
+        comparison = dateA - dateB;
+        break;
+      case 'score':
+        const scoreA = a.score !== null ? a.score : -1;
+        const scoreB = b.score !== null ? b.score : -1;
+        comparison = scoreA - scoreB;
+        break;
+      case 'status':
+        const statusA = a.status || '';
+        const statusB = b.status || '';
+        comparison = statusA.localeCompare(statusB);
+        break;
+      default:
+        return 0;
+    }
+    
+    return direction === 'asc' ? comparison : -comparison;
+  });
+  
+  return sorted;
+}
+
+/**
+ * Retourne l'icône de tri pour une colonne
+ * @param {string} column - Colonne
+ * @returns {string}
+ */
+function getSortIcon(column) {
+  if (sortConfig.column !== column) {
+    return '<span style="opacity: 0.3;">↕️</span>';
+  }
+  return sortConfig.direction === 'asc' ? '↑' : '↓';
 }
 
 /**
@@ -180,11 +457,11 @@ function renderSubmissionsContent() {
  */
 function renderStatusBadge(status) {
   const badges = {
-    'submitted': '<span class="badge" style="background: var(--warning); color: white;">Rendu</span>',
-    'graded': '<span class="badge" style="background: var(--success); color: white;">Corrigé</span>'
+    'submitted': '<span class="badge" style="background: #f59e0b; color: white; font-weight: 600; padding: 6px 12px; border-radius: 6px; display: inline-block;">Rendu</span>',
+    'graded': '<span class="badge" style="background: #22c55e; color: white; font-weight: 600; padding: 6px 12px; border-radius: 6px; display: inline-block;">Corrigé</span>'
   };
   
-  return badges[status] || '<span class="badge ghost">Inconnu</span>';
+  return badges[status] || '<span class="badge" style="background: #64748b; color: white; font-weight: 600; padding: 6px 12px; border-radius: 6px; display: inline-block;">Inconnu</span>';
 }
 
 /**
