@@ -147,8 +147,128 @@ export function getAllSchools() {
   return Object.values(schoolsState).map(school => ({
     id: school.id,
     name: school.name,
-    city: school.city
+    city: school.city,
+    address: school.address,
+    director: school.director,
+    classes: school.classes || [],
+    teachers: school.teachers || [],
+    students: school.students || [],
+    classesCount: (school.classes || []).length,
+    studentsCount: (school.students || []).reduce((sum, s) => sum + 1, 0),
+    usersCount: (school.teachers || []).length
   }));
+}
+
+/**
+ * Crée un nouvel élève dans l'établissement actif
+ * @param {object} studentData - Données de l'élève
+ * @returns {object}
+ */
+export function createStudent(studentData) {
+  const schoolId = getActiveSchoolId();
+  if (!schoolId) throw new Error('Aucun établissement actif');
+  
+  const newStudent = {
+    id: `student_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    name: studentData.name || '',
+    email: studentData.email || '',
+    className: studentData.className || '',
+    status: studentData.status || 'actif'
+  };
+  
+  schoolsState[schoolId].students.push(newStudent);
+  
+  // Mettre à jour le nombre d'élèves dans la classe
+  if (studentData.className) {
+    const classIndex = schoolsState[schoolId].classes.findIndex(c => c.name === studentData.className);
+    if (classIndex !== -1) {
+      schoolsState[schoolId].classes[classIndex].students = 
+        (schoolsState[schoolId].classes[classIndex].students || 0) + 1;
+    }
+  }
+  
+  return { ...newStudent };
+}
+
+/**
+ * Crée plusieurs élèves à partir d'un tableau
+ * @param {Array<object>} studentsData - Tableau de données d'élèves
+ * @returns {Array<object>}
+ */
+export function createStudents(studentsData) {
+  const schoolId = getActiveSchoolId();
+  if (!schoolId) throw new Error('Aucun établissement actif');
+  
+  const createdStudents = [];
+  
+  studentsData.forEach(studentData => {
+    const newStudent = {
+      id: `student_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: studentData.name || '',
+      email: studentData.email || '',
+      className: studentData.className || '',
+      status: studentData.status || 'actif'
+    };
+    
+    schoolsState[schoolId].students.push(newStudent);
+    createdStudents.push(newStudent);
+    
+    // Mettre à jour le nombre d'élèves dans la classe
+    if (studentData.className) {
+      const classIndex = schoolsState[schoolId].classes.findIndex(c => c.name === studentData.className);
+      if (classIndex !== -1) {
+        schoolsState[schoolId].classes[classIndex].students = 
+          (schoolsState[schoolId].classes[classIndex].students || 0) + 1;
+      }
+    }
+  });
+  
+  return createdStudents;
+}
+
+/**
+ * Assigne un élève à une classe
+ * @param {string} studentId - ID de l'élève
+ * @param {string} className - Nom de la classe
+ * @returns {object|null}
+ */
+export function assignStudentToClass(studentId, className) {
+  const schoolId = getActiveSchoolId();
+  if (!schoolId) throw new Error('Aucun établissement actif');
+  
+  const student = schoolsState[schoolId].students.find(s => s.id === studentId);
+  if (!student) return null;
+  
+  const oldClassName = student.className;
+  student.className = className;
+  
+  // Mettre à jour le nombre d'élèves dans l'ancienne classe
+  if (oldClassName) {
+    const oldClassIndex = schoolsState[schoolId].classes.findIndex(c => c.name === oldClassName);
+    if (oldClassIndex !== -1 && schoolsState[schoolId].classes[oldClassIndex].students > 0) {
+      schoolsState[schoolId].classes[oldClassIndex].students--;
+    }
+  }
+  
+  // Mettre à jour le nombre d'élèves dans la nouvelle classe
+  const newClassIndex = schoolsState[schoolId].classes.findIndex(c => c.name === className);
+  if (newClassIndex !== -1) {
+    schoolsState[schoolId].classes[newClassIndex].students = 
+      (schoolsState[schoolId].classes[newClassIndex].students || 0) + 1;
+  }
+  
+  return { ...student };
+}
+
+/**
+ * Retourne les élèves d'une classe spécifique
+ * @param {string} className - Nom de la classe
+ * @returns {Array}
+ */
+export function getStudentsByClass(className) {
+  const school = getActiveSchool();
+  if (!school) return [];
+  return school.students.filter(s => s.className === className);
 }
 
 /**
@@ -332,8 +452,8 @@ export function getUsers() {
   if (!school) return [];
   
   return [
-    ...school.teachers.map(t => ({ ...t })),
-    ...school.students.map(s => ({ ...s, role: 'Étudiant' }))
+    ...school.teachers.map(t => ({ ...t, active: t.status === 'actif' })),
+    ...school.students.map(s => ({ ...s, role: 'Étudiant', active: s.status === 'actif' }))
   ];
 }
 
@@ -373,10 +493,14 @@ export default {
   getClasses,
   getTeachers,
   getStudents,
+  getStudentsByClass,
   getThemesPublished,
   createClass,
   updateClass,
   createUser,
+  createStudent,
+  createStudents,
+  assignStudentToClass,
   createSchool,
   updateSchoolInfo,
   getSchoolInfo,
