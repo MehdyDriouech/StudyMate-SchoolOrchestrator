@@ -5,9 +5,10 @@
 
 import { navigateTo } from '../app.js';
 import { isDemoSession, endDemoSession } from '../features/features-control/feature-demo-mode.js';
-import { getUserRole, handleLogout } from '../features/features-control/feature-auth.js';
+import { getUserRole } from '../features/features-control/feature-auth.js';
 import { initSchoolSwitcher } from './SchoolSwitcher.js';
 import { getTopNavItems, getParentRoute } from './NavigationManager.js';
+import { initUserMenu } from './UserMenu.js';
 
 /**
  * Initialise la navigation principale
@@ -47,18 +48,6 @@ export function initTopNav() {
     `;
   });
   
-  // Ajouter un bouton de déconnexion
-  navHTML += `
-    <button 
-      id="btn-logout" 
-      class="btn ghost"
-      aria-label="Se déconnecter"
-      title="Se déconnecter"
-      style="color: var(--danger);">
-      🚪 Déconnexion
-    </button>
-  `;
-  
   nav.innerHTML = navHTML;
   
   // Ajouter les event listeners
@@ -69,15 +58,8 @@ export function initTopNav() {
     });
   });
   
-  // Event listener pour la déconnexion
-  const btnLogout = document.getElementById('btn-logout');
-  if (btnLogout) {
-    btnLogout.addEventListener('click', () => {
-      if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
-        handleLogout();
-      }
-    });
-  }
+  // Initialiser le menu utilisateur (remplace le bouton de déconnexion)
+  initUserMenu();
   
   // Initialiser le sélecteur d'établissement (sauf pour les étudiants)
   if (userRole !== 'student') {

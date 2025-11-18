@@ -11,6 +11,7 @@ import { updateDemoBadge } from './components/DemoBadge.js';
 import { setActiveSchoolId, getActiveSchoolId } from './features/features-control/store-multischool.js';
 import { needsSidebar, getSidebarItems, getParentRoute } from './components/NavigationManager.js';
 import { renderSidebar, removeSidebar } from './components/Sidebar.js';
+import { loadSavedTheme } from './components/UserMenu.js';
 
 // État global de l'application
 export const AppState = {
@@ -380,6 +381,9 @@ function getRenderFunctionName(viewName) {
  */
 function initApp() {
   console.log(`[App] Initialisation de ${CONFIG.APP_NAME} v${CONFIG.APP_VERSION}`);
+  
+  // Charger le thème sauvegardé
+  loadSavedTheme();
   
   // Vérifier si une session démo est active
   AppState.isDemo = isDemoSession();

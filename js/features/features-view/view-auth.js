@@ -97,9 +97,29 @@ export function renderAuthView(container) {
           </div>
           
           <div>
-            <label for="password" style="display: block; margin-bottom: 8px; font-weight: 500;">
-              Mot de passe
-            </label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label for="password" style="display: block; font-weight: 500;">
+                Mot de passe
+              </label>
+              <button
+                type="button"
+                id="btn-forgot-password"
+                style="
+                  background: none;
+                  border: none;
+                  color: var(--accent);
+                  font-size: 0.875rem;
+                  cursor: pointer;
+                  text-decoration: underline;
+                  padding: 0;
+                  font-weight: 500;
+                "
+                onmouseover="this.style.opacity='0.8'"
+                onmouseout="this.style.opacity='1'"
+              >
+                Mot de passe oublié ?
+              </button>
+            </div>
             <input
               type="password"
               id="password"
@@ -185,6 +205,15 @@ function setupAuthEventListeners() {
     });
   }
   
+  // Bouton mot de passe oublié
+  const btnForgotPassword = document.getElementById('btn-forgot-password');
+  if (btnForgotPassword) {
+    btnForgotPassword.addEventListener('click', (e) => {
+      e.preventDefault();
+      showForgotPasswordModal();
+    });
+  }
+  
   // Formulaire de connexion
   const loginForm = document.getElementById('login-form');
   const btnLogin = document.getElementById('btn-login');
@@ -245,6 +274,232 @@ function setupAuthEventListeners() {
       }
     });
   }
+}
+
+/**
+ * Affiche la modale de réinitialisation de mot de passe
+ */
+function showForgotPasswordModal() {
+  const modal = createModal(`
+    <div style="max-width: 450px; margin: 0 auto;">
+      <h2 style="font-size: 1.5rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+        <span>🔑</span>
+        <span>Mot de passe oublié</span>
+      </h2>
+      <p style="color: var(--muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.6;">
+        Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+      </p>
+      
+      <form id="forgot-password-form" style="display: grid; gap: 16px;">
+        <div>
+          <label for="forgot-email" style="display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; font-weight: 500;">
+            Adresse email
+          </label>
+          <input 
+            type="email" 
+            id="forgot-email" 
+            required
+            placeholder="votre.email@etablissement.fr"
+            style="width: 100%; padding: 12px 16px; border: 2px solid var(--card-border); border-radius: var(--radius-md); background: var(--card); color: var(--fg); font-size: 1rem; transition: border-color var(--transition-base);"
+            onfocus="this.style.borderColor='var(--accent)'"
+            onblur="this.style.borderColor='var(--card-border)'"
+          />
+        </div>
+        
+        <div id="forgot-password-error" style="display: none; padding: 12px; background: var(--danger-light); color: var(--danger); border-radius: var(--radius-sm); font-size: 0.9rem;"></div>
+        
+        <div id="forgot-password-success" style="display: none; padding: 12px; background: var(--accent-light); color: var(--accent); border-radius: var(--radius-sm); font-size: 0.9rem;"></div>
+        
+        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px;">
+          <button type="button" class="btn ghost" onclick="this.closest('.modal-overlay').remove()">
+            Annuler
+          </button>
+          <button type="submit" class="btn primary" id="btn-send-reset-link">
+            Envoyer le lien
+          </button>
+        </div>
+      </form>
+    </div>
+  `);
+  
+  document.body.appendChild(modal);
+  
+  // Gérer la soumission du formulaire
+  const form = modal.querySelector('#forgot-password-form');
+  const btnSend = modal.querySelector('#btn-send-reset-link');
+  const errorDiv = modal.querySelector('#forgot-password-error');
+  const successDiv = modal.querySelector('#forgot-password-success');
+  
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('forgot-email').value.trim();
+    
+    // Validation basique
+    if (!email || !email.includes('@')) {
+      errorDiv.textContent = 'Veuillez entrer une adresse email valide.';
+      errorDiv.style.display = 'block';
+      successDiv.style.display = 'none';
+      return;
+    }
+    
+    // Cacher les messages précédents
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    
+    // Désactiver le bouton pendant l'envoi
+    btnSend.disabled = true;
+    btnSend.textContent = '⏳ Envoi en cours...';
+    
+    try {
+      // Simuler l'envoi du lien de réinitialisation
+      await sendPasswordResetLink(email);
+      
+      // Afficher le message de succès
+      successDiv.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.2rem;">✅</span>
+          <div>
+            <strong>Email envoyé !</strong><br/>
+            <span style="font-size: 0.85rem;">Un lien de réinitialisation a été envoyé à <strong>${escapeHtml(email)}</strong>.</span>
+          </div>
+        </div>
+      `;
+      successDiv.style.display = 'block';
+      
+      // Réinitialiser le formulaire
+      form.reset();
+      
+      // Fermer la modale après 3 secondes
+      setTimeout(() => {
+        modal.remove();
+      }, 3000);
+      
+    } catch (error) {
+      // Afficher l'erreur
+      errorDiv.textContent = error.message || 'Une erreur est survenue. Veuillez réessayer.';
+      errorDiv.style.display = 'block';
+      
+      // Réactiver le bouton
+      btnSend.disabled = false;
+      btnSend.textContent = 'Envoyer le lien';
+    }
+  });
+}
+
+/**
+ * Envoie le lien de réinitialisation de mot de passe
+ * @param {string} email - Email de l'utilisateur
+ * @returns {Promise<void>}
+ */
+async function sendPasswordResetLink(email) {
+  console.log('[View Auth] Envoi du lien de réinitialisation pour:', email);
+  
+  // Simuler un délai réseau
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Vérifier si l'email existe dans la base de données fake
+  const FAKE_USERS = {
+    'enseignant@ecole.fr': { name: 'Professeur Martin' },
+    'directeur@ecole.fr': { name: 'Directeur Dupont' },
+    'etudiant@ecole.fr': { name: 'Élève Sophie' },
+    'etudiant@condorcet.fr': { name: 'Élève Emma' },
+    'pedago@ecole.fr': { name: 'Référent pédagogique' }
+  };
+  
+  // Pour la démo, on accepte tous les emails valides
+  // Dans une vraie app, on vérifierait si l'email existe
+  if (!email || !email.includes('@')) {
+    throw new Error('Adresse email invalide');
+  }
+  
+  // Simuler l'envoi du lien (dans une vraie app, on ferait un appel API)
+  console.log('[View Auth] ✅ Lien de réinitialisation envoyé à', email);
+  
+  // Dans une vraie application, on générerait un token unique et on l'enverrait par email
+  // Pour la démo, on simule juste le succès
+}
+
+/**
+ * Crée une modale
+ * @param {string} content - Contenu HTML de la modale
+ * @returns {HTMLElement}
+ */
+function createModal(content) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  `;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-content';
+  modal.style.cssText = `
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    animation: modalFadeIn 0.2s ease-out;
+  `;
+  
+  modal.innerHTML = content;
+  overlay.appendChild(modal);
+  
+  // Fermer en cliquant sur l'overlay
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+    }
+  });
+  
+  // Ajouter l'animation CSS si elle n'existe pas déjà
+  if (!document.getElementById('modal-animations')) {
+    const style = document.createElement('style');
+    style.id = 'modal-animations';
+    style.textContent = `
+      @keyframes modalFadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95) translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  return overlay;
+}
+
+/**
+ * Échappe le HTML pour éviter les injections XSS
+ * @param {string} str - Chaîne à échapper
+ * @returns {string}
+ */
+function escapeHtml(str = '') {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // Export global pour que app.js puisse l'appeler
