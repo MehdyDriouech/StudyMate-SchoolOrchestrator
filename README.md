@@ -220,8 +220,8 @@ python -m http.server 8000
 
 # 🎯 Roadmap
 
-### Phase 1 – Démo complète  
-- IA (fake)  
+### Phase 1 – Démo complète - Donnée mockées 
+- IA  
 - Qualité  
 - Curriculum  
 - Assignations  
@@ -243,5 +243,6 @@ python -m http.server 8000
 # 👨‍💼 Auteur
 
 **Mehdy Driouech**  
-Engineering Manager, Consultant & Formateur  
-🌐 www.mehdydriouech.fr  
+Engineering Manager, Consultant technique & Formateur  
+🌐 www.mehdydriouech.fr 
+🌐 dawpengineering.com
