@@ -24,11 +24,11 @@ Il permet aux enseignants, directeurs et équipes qualité de :
 
 ---
 
-# ✨ Fonctionnalités principales
+# ✨ Fonctionnalités principales (mode démo)
 
 ## 👩‍🏫 Enseignants : Création & Diffusion
 
-### 🎨 AI Theme Studio (mode démo)
+### 🎨 AI Theme Studio
 - Génération mock de quiz, flashcards et fiches.
 - Éditeur visuel clair et ergonomique.
 - Choix de la matière, du niveau, des formats.
