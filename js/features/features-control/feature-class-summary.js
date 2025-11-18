@@ -153,19 +153,20 @@ function calculateKPIs(assignments, submissions, classInfo, socialStats) {
  */
 function identifyStudents(submissions, socialStats, classInfo) {
   // Utiliser les stats sociales si disponibles
+  // Les scores individuels restent sur 20 (ne pas convertir)
   const struggling = (socialStats?.struggling || []).map(s => ({
     name: s.name,
-    avgScore: s.score || 0,
+    avgScore: s.score || 0, // Score sur 20
     missingSubmissions: Math.floor(Math.random() * 3) + 1 // Mock
   }));
   
   const topPerformers = (socialStats?.topPerformers || []).map(s => ({
     name: s.name,
-    avgScore: s.score || 0,
+    avgScore: s.score || 0, // Score sur 20
     avgTime: s.time || 0
   }));
   
-  // Si pas de stats sociales, générer des données mockées
+  // Si pas de stats sociales, générer des données mockées (scores sur 20)
   if (struggling.length === 0) {
     struggling.push(
       { name: 'Omar', avgScore: 9, missingSubmissions: 2 },

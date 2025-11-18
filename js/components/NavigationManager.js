@@ -51,7 +51,8 @@ export const NAVIGATION_CONFIG = {
       ],
       'director-analytics': [
         { route: 'director-analytics/school', label: '📈 Stats établissement' },
-        { route: 'director-analytics/inter', label: '🔍 Comparaison inter-établissements' }
+        { route: 'director-analytics/inter', label: '🔍 Comparaison inter-établissements' },
+        { route: 'director-analytics/usage-heatmap', label: '📊 Usage des contenus' }
       ]
     }
   },

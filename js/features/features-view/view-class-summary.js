@@ -161,7 +161,7 @@ function renderSummaryContent(container) {
       <!-- Section KPIs -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 32px;">
         ${renderKPICard('Taux de rendus', `${kpis.submissionRate}%`, '📋', kpis.submissionRate >= 75 ? 'success' : kpis.submissionRate >= 50 ? 'warning' : 'danger')}
-        ${renderKPICard('Score moyen', `${kpis.avgScore}/20`, '⭐', kpis.avgScore >= 14 ? 'success' : kpis.avgScore >= 10 ? 'warning' : 'danger')}
+        ${renderKPICard('Score moyen', `${kpis.avgScore}/100`, '⭐', kpis.avgScore >= 70 ? 'success' : kpis.avgScore >= 50 ? 'warning' : 'danger')}
         ${renderKPICard('Thèmes actifs', `${kpis.activeThemesCount}`, '📚', 'info')}
         ${renderKPICard('Élèves en difficulté', `${kpis.strugglingPercentage}%`, '⚠️', kpis.strugglingPercentage <= 10 ? 'success' : kpis.strugglingPercentage <= 20 ? 'warning' : 'danger')}
       </div>

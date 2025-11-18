@@ -60,8 +60,9 @@ const VIEWS = {
   'director-admin/classes': 'view-director-admin-classes',
   'director-admin/users': 'view-director-admin-users',
   'director-analytics': 'view-director-analytics',
-  'director-analytics/school': 'view-director-analytics-school',
-  'director-analytics/inter': 'view-director-analytics-inter',
+  'director-analytics/school': 'view-director-analytics',
+  'director-analytics/inter': 'view-director-analytics',
+  'director-analytics/usage-heatmap': 'view-director-analytics',
   'pedago-curriculum': 'view-pedago-curriculum'
 };
 
@@ -95,6 +96,7 @@ const VIEW_PERMISSIONS = {
   'director-analytics': ['director'],
   'director-analytics/school': ['director'],
   'director-analytics/inter': ['director'],
+  'director-analytics/usage-heatmap': ['director'],
   'pedago-curriculum': ['pedago'],
   'training': ['student'],
   'development': ['teacher', 'director', 'pedago']
@@ -357,27 +359,59 @@ function renderViewContent(viewContainer, viewName, viewId, queryParams = null) 
         console.warn(`[Router] Fonction ${renderFunctionName} toujours non trouvée, liste des fonctions disponibles:`, availableFunctions);
         
         // Retry après un court délai (pour les modules ES asynchrones)
-        setTimeout(() => {
+        let retryCount = 0;
+        const maxRetries = 10;
+        const retryInterval = 100;
+        
+        const retryFunction = () => {
           renderFunction = window[renderFunctionName];
           if (typeof renderFunction === 'function') {
-            console.log(`[Router] Fonction ${renderFunctionName} trouvée après délai, rendu de la vue`);
+            console.log(`[Router] Fonction ${renderFunctionName} trouvée après délai (${retryCount * retryInterval}ms), rendu de la vue`);
             const result = renderFunction(viewContainer, viewName, queryParams);
             if (result instanceof Promise) {
-              result.catch(error => {
+              result.then(() => {
+                console.log(`[Router] Fonction async ${renderFunctionName} terminée`);
+              }).catch(error => {
                 console.error(`[Router] Erreur dans la fonction async ${renderFunctionName}:`, error);
+                viewContainer.innerHTML = `
+                  <div class="card" style="margin: 24px auto; max-width: 600px; text-align: center; padding: 24px;">
+                    <h2>❌ Erreur de chargement</h2>
+                    <p style="color: var(--danger); margin-top: 12px;">
+                      ${error.message || 'Erreur lors du chargement de la vue'}
+                    </p>
+                  </div>
+                `;
               });
             }
+          } else if (retryCount < maxRetries) {
+            retryCount++;
+            setTimeout(retryFunction, retryInterval);
+          } else {
+            console.error(`[Router] Fonction ${renderFunctionName} non trouvée après ${maxRetries} tentatives`);
+            viewContainer.innerHTML = `
+              <div class="card" style="margin: 24px auto; max-width: 600px; text-align: center; padding: 24px;">
+                <h2>⚠️ Chargement en cours</h2>
+                <p style="color: var(--muted); margin-top: 12px;">
+                  La vue est en cours de chargement. Si le problème persiste, veuillez rafraîchir la page.
+                </p>
+              </div>
+            `;
           }
-        }, 100);
+        };
+        
+        setTimeout(retryFunction, retryInterval);
         return; // Sortir pour éviter le rendu d'erreur immédiat
       }
     }
     
     if (typeof renderFunction === 'function') {
+      console.log(`[Router] Appel de la fonction ${renderFunctionName} avec viewName: ${viewName}, container:`, viewContainer);
       // Gérer les fonctions async, passer les query params
       const result = renderFunction(viewContainer, viewName, queryParams);
       if (result instanceof Promise) {
-        result.catch(error => {
+        result.then(() => {
+          console.log(`[Router] Fonction async ${renderFunctionName} terminée, innerHTML length:`, viewContainer.innerHTML.length);
+        }).catch(error => {
           console.error(`[Router] Erreur dans la fonction async ${renderFunctionName}:`, error);
           viewContainer.innerHTML = `
             <div class="card" style="margin: 24px auto; max-width: 600px; text-align: center;">
@@ -388,6 +422,8 @@ function renderViewContent(viewContainer, viewName, viewId, queryParams = null) 
             </div>
           `;
         });
+      } else {
+        console.log(`[Router] Fonction ${renderFunctionName} terminée (sync), innerHTML length:`, viewContainer.innerHTML.length);
       }
     } else {
       console.warn(`[Router] Fonction de rendu non trouvée pour: ${viewName}`);

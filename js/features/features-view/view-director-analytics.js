@@ -1,12 +1,15 @@
 /**
  * View Director Analytics - Conteneur pour les analytics du directeur
- * Gère les sous-routes : school, inter
+ * Gère les sous-routes : school, inter, usage-heatmap
  */
 
 import { getSubRoute } from '../../components/NavigationManager.js';
 import { loadDirectorDashboardData } from '../features-control/feature-dashboard-director.js';
 import { getAllSchools } from '../features-control/store-multischool.js';
 import { navigateTo } from '../../app.js';
+import { renderDirectorUsageHeatmapView } from './view-director-usage-heatmap.js';
+
+console.log('[View Director Analytics] ✅ Module chargé avec succès');
 
 let analyticsContainer = null;
 
@@ -17,93 +20,168 @@ let analyticsContainer = null;
  */
 export async function renderDirectorAnalyticsView(container, route = 'director-analytics') {
   console.log('[View Director Analytics] Rendu des analytics, route:', route);
+  console.log('[View Director Analytics] Container:', container);
+  console.log('[View Director Analytics] Container existe:', !!container);
+  
+  if (!container) {
+    console.error('[View Director Analytics] Container est null ou undefined!');
+    return;
+  }
+  
+  // S'assurer que le conteneur est visible
+  if (container.style) {
+    container.style.display = 'block';
+    container.style.visibility = 'visible';
+    container.style.opacity = '1';
+  }
   
   analyticsContainer = container;
   const subRoute = getSubRoute(route);
+  console.log('[View Director Analytics] Sous-route extraite:', subRoute);
   
   // Si pas de sous-route, rendre directement la première (school) au lieu de rediriger
   const routeToRender = subRoute || 'school';
+  console.log('[View Director Analytics] Route à rendre:', routeToRender);
   
   // Router vers la bonne vue selon la sous-route
-  switch (routeToRender) {
-    case 'school':
-      await renderSchoolStatsView(container);
-      break;
-    case 'inter':
-      renderInterSchoolComparisonView(container);
-      break;
-    default:
+  try {
+    switch (routeToRender) {
+      case 'school':
+        console.log('[View Director Analytics] Rendu de school stats');
+        await renderSchoolStatsView(container);
+        break;
+      case 'inter':
+        console.log('[View Director Analytics] Rendu de inter school comparison');
+        renderInterSchoolComparisonView(container);
+        break;
+      case 'usage-heatmap':
+        console.log('[View Director Analytics] Rendu de usage heatmap');
+        await renderDirectorUsageHeatmapView(container);
+        break;
+      default:
+        console.warn('[View Director Analytics] Sous-route inconnue:', routeToRender);
+        container.innerHTML = `
+          <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center; padding: 24px;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+            <h2>Sous-route inconnue</h2>
+            <p style="color: var(--muted); margin: 16px 0;">
+              La route "${subRoute}" n'existe pas.
+            </p>
+          </div>
+        `;
+    }
+    
+    console.log('[View Director Analytics] Rendu terminé, innerHTML length:', container.innerHTML.length);
+    console.log('[View Director Analytics] Container visible:', container.offsetWidth > 0 && container.offsetHeight > 0);
+    
+    // Vérifier que le contenu est bien rendu
+    if (container.innerHTML.length === 0) {
+      console.error('[View Director Analytics] ERREUR: Le conteneur est vide après le rendu!');
       container.innerHTML = `
-        <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center;">
-          <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
-          <h2>Sous-route inconnue</h2>
-          <p style="color: var(--muted); margin: 16px 0;">
-            La route "${subRoute}" n'existe pas.
+        <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center; padding: 24px;">
+          <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
+          <h2>Erreur de rendu</h2>
+          <p style="color: var(--danger); margin: 16px 0;">
+            Le contenu n'a pas pu être rendu. Route: ${route}, Sous-route: ${subRoute}
           </p>
         </div>
       `;
+    }
+  } catch (error) {
+    console.error('[View Director Analytics] Erreur lors du rendu:', error);
+    container.innerHTML = `
+      <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center; padding: 24px;">
+        <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+        <h2>Erreur de rendu</h2>
+        <p style="color: var(--danger); margin: 16px 0;">
+          ${error.message || 'Une erreur est survenue lors du rendu de la vue.'}
+        </p>
+      </div>
+    `;
   }
+}
+
+// S'assurer que la fonction est disponible dans window immédiatement après sa déclaration
+if (typeof window !== 'undefined') {
+  window.renderDirectorAnalyticsView = renderDirectorAnalyticsView;
+  console.log('[View Director Analytics] Fonction assignée à window.renderDirectorAnalyticsView');
 }
 
 /**
  * Rend la vue des stats de l'établissement
  */
 async function renderSchoolStatsView(container) {
-  const dashboardData = await loadDirectorDashboardData();
+  console.log('[View Director Analytics] renderSchoolStatsView appelée, container:', container);
   
-  // Vérifier que les données sont valides
-  if (!dashboardData || !dashboardData.stats || !dashboardData.classesComparison || !dashboardData.teachersPerformance) {
-    container.innerHTML = `
-      <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center;">
-        <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
-        <h2>Données non disponibles</h2>
-        <p style="color: var(--muted); margin: 16px 0;">
-          Les données du dashboard ne sont pas encore chargées. Veuillez réessayer.
-        </p>
-      </div>
-    `;
+  if (!container) {
+    console.error('[View Director Analytics] renderSchoolStatsView: container est null!');
     return;
   }
   
-  const { stats, classesComparison, teachersPerformance } = dashboardData;
+  try {
+    const dashboardData = await loadDirectorDashboardData();
+    console.log('[View Director Analytics] Dashboard data chargée:', !!dashboardData);
+    
+    // Vérifier que les données sont valides
+    if (!dashboardData || !dashboardData.stats || !dashboardData.classesComparison || !dashboardData.teachersPerformance) {
+      console.warn('[View Director Analytics] Données incomplètes:', {
+        hasData: !!dashboardData,
+        hasStats: !!dashboardData?.stats,
+        hasClassesComparison: !!dashboardData?.classesComparison,
+        hasTeachersPerformance: !!dashboardData?.teachersPerformance
+      });
+      container.innerHTML = `
+        <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center; padding: 24px;">
+          <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
+          <h2>Données non disponibles</h2>
+          <p style="color: var(--muted); margin: 16px 0;">
+            Les données du dashboard ne sont pas encore chargées. Veuillez réessayer.
+          </p>
+        </div>
+      `;
+      return;
+    }
   
-  // Calculer le total des élèves
-  const totalStudents = classesComparison.reduce((sum, cls) => sum + (cls.studentsCount || 0), 0);
+    const { stats, classesComparison, teachersPerformance } = dashboardData;
   
-  // Calculer la moyenne des notes
-  const avgGrade = classesComparison.length > 0
-    ? classesComparison.reduce((sum, cls) => sum + (cls.avgGrade || 0), 0) / classesComparison.length
-    : 0;
+    // Calculer le total des élèves
+    const totalStudents = classesComparison.reduce((sum, cls) => sum + (cls.studentsCount || 0), 0);
   
-  // Créer les KPIs
-  const kpis = {
-    totalStudents,
-    totalClasses: stats.totalClasses || 0,
-    completionRate: parseFloat(stats.avgCompletionRate) || 0,
-    averageGrade: avgGrade
-  };
+    // Calculer la moyenne des notes
+    const avgGrade = classesComparison.length > 0
+      ? classesComparison.reduce((sum, cls) => sum + (cls.avgGrade || 0), 0) / classesComparison.length
+      : 0;
   
-  // Trier les classes par taux de complétion (top 5)
-  const topClasses = classesComparison
-    .sort((a, b) => (b.completionRate || 0) - (a.completionRate || 0))
-    .slice(0, 5)
-    .map(cls => ({
-      name: cls.className,
-      studentsCount: cls.studentsCount || 0,
-      avgCompletion: cls.completionRate || 0
-    }));
+    // Créer les KPIs
+    const kpis = {
+      totalStudents,
+      totalClasses: stats.totalClasses || 0,
+      completionRate: parseFloat(stats.avgCompletionRate) || 0,
+      averageGrade: avgGrade
+    };
   
-  // Trier les enseignants par taux de complétion moyen (top 5)
-  const topTeachers = teachersPerformance
-    .sort((a, b) => (b.avgCompletionRate || 0) - (a.avgCompletionRate || 0))
-    .slice(0, 5)
-    .map(teacher => ({
-      name: teacher.name,
-      classesCount: teacher.classesCount || 0,
-      avgCompletion: teacher.avgCompletionRate || 0
-    }));
+    // Trier les classes par taux de complétion (top 5)
+    const topClasses = classesComparison
+      .sort((a, b) => (b.completionRate || 0) - (a.completionRate || 0))
+      .slice(0, 5)
+      .map(cls => ({
+        name: cls.className,
+        studentsCount: cls.studentsCount || 0,
+        avgCompletion: cls.completionRate || 0
+      }));
   
-  container.innerHTML = `
+    // Trier les enseignants par taux de complétion moyen (top 5)
+    const topTeachers = teachersPerformance
+      .sort((a, b) => (b.avgCompletionRate || 0) - (a.avgCompletionRate || 0))
+      .slice(0, 5)
+      .map(teacher => ({
+        name: teacher.name,
+        classesCount: teacher.classesCount || 0,
+        avgCompletion: teacher.avgCompletionRate || 0
+      }));
+  
+    console.log('[View Director Analytics] Génération du HTML pour school stats');
+    container.innerHTML = `
     <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
       <div style="margin-bottom: 32px;">
         <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
@@ -212,15 +290,38 @@ async function renderSchoolStatsView(container) {
       </div>
     </div>
   `;
+    console.log('[View Director Analytics] HTML généré pour school stats, length:', container.innerHTML.length);
+  } catch (error) {
+    console.error('[View Director Analytics] Erreur dans renderSchoolStatsView:', error);
+    container.innerHTML = `
+      <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center; padding: 24px;">
+        <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+        <h2>Erreur de chargement</h2>
+        <p style="color: var(--danger); margin: 16px 0;">
+          ${error.message || 'Une erreur est survenue lors du chargement des données.'}
+        </p>
+      </div>
+    `;
+  }
 }
 
 /**
  * Rend la vue de comparaison inter-établissements
  */
 function renderInterSchoolComparisonView(container) {
-  const schools = getAllSchools();
+  console.log('[View Director Analytics] renderInterSchoolComparisonView appelée, container:', container);
   
-  container.innerHTML = `
+  if (!container) {
+    console.error('[View Director Analytics] renderInterSchoolComparisonView: container est null!');
+    return;
+  }
+  
+  try {
+    const schools = getAllSchools();
+    console.log('[View Director Analytics] Schools chargées:', schools.length);
+    
+    console.log('[View Director Analytics] Génération du HTML pour inter school comparison');
+    container.innerHTML = `
     <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
       <div style="margin-bottom: 32px;">
         <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
@@ -268,6 +369,19 @@ function renderInterSchoolComparisonView(container) {
       </div>
     </div>
   `;
+    console.log('[View Director Analytics] HTML généré pour inter school comparison, length:', container.innerHTML.length);
+  } catch (error) {
+    console.error('[View Director Analytics] Erreur dans renderInterSchoolComparisonView:', error);
+    container.innerHTML = `
+      <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center; padding: 24px;">
+        <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+        <h2>Erreur de chargement</h2>
+        <p style="color: var(--danger); margin: 16px 0;">
+          ${error.message || 'Une erreur est survenue lors du chargement des données.'}
+        </p>
+      </div>
+    `;
+  }
 }
 
 function escapeHtml(str = '') {
@@ -279,7 +393,11 @@ function escapeHtml(str = '') {
     .replace(/'/g, '&#039;');
 }
 
-// Export global pour app.js
-window.renderDirectorAnalyticsView = renderDirectorAnalyticsView;
+// Export global pour app.js (doit être fait immédiatement au niveau du module)
+// S'assurer que c'est bien assigné (au cas où la première assignation n'a pas fonctionné)
+if (typeof window !== 'undefined') {
+  window.renderDirectorAnalyticsView = renderDirectorAnalyticsView;
+  console.log('[View Director Analytics] Export global final - fonction disponible:', typeof window.renderDirectorAnalyticsView);
+}
 export default { renderDirectorAnalyticsView };
 
