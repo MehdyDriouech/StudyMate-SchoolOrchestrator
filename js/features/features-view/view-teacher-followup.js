@@ -45,8 +45,9 @@ export function renderTeacherFollowupView(container, route = 'teacher-followup')
 
 /**
  * Rend la vue analytics/social pour le suivi
+ * @param {HTMLElement} container - Conteneur de la vue
  */
-function renderTeacherFollowupSocialView(container) {
+export function renderTeacherFollowupSocialView(container) {
   const classes = getClasses();
   const firstClass = classes[0];
   
@@ -67,7 +68,7 @@ function renderTeacherFollowupSocialView(container) {
   const leaderboard = getClassSocialLeaderboard().filter(student => student.name !== 'Moi');
   
   container.innerHTML = `
-    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+    <div style="width: 100%; max-width: 100%; margin: 0; padding: 24px 32px; box-sizing: border-box;">
       <div style="margin-bottom: 32px;">
         <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
           📊 Analytics / Social Classe
@@ -115,14 +116,20 @@ function renderTeacherFollowupSocialView(container) {
       <!-- Leaderboard -->
       <div class="card">
         <h2 style="font-size: 1.25rem; margin-bottom: 16px;">Classement social</h2>
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; table-layout: fixed;">
+            <colgroup>
+              <col style="width: 40%;">
+              <col style="width: 20%;">
+              <col style="width: 20%;">
+              <col style="width: 20%;">
+            </colgroup>
             <thead>
               <tr style="border-bottom: 2px solid var(--card-border);">
-                <th style="padding: 10px; text-align: left;">Élève</th>
-                <th style="padding: 10px; text-align: center;">Score</th>
-                <th style="padding: 10px; text-align: center;">Temps</th>
-                <th style="padding: 10px; text-align: center;">Rang</th>
+                <th style="padding: 12px; text-align: left;">Élève</th>
+                <th style="padding: 12px; text-align: center;">Score</th>
+                <th style="padding: 12px; text-align: center;">Temps</th>
+                <th style="padding: 12px; text-align: center;">Rang</th>
               </tr>
             </thead>
             <tbody>

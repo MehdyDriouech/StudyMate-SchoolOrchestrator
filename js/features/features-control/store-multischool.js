@@ -4,32 +4,62 @@
 
 const STORAGE_ACTIVE_SCHOOL = 'SM_SO_ACTIVE_SCHOOL_ID';
 
+// Liste cohérente des élèves récurrents
+const DEMO_STUDENTS = [
+  { id: 'student_nathan', name: 'Nathan Leroy', email: 'nathan.leroy@ecole.fr' },
+  { id: 'student_sarah', name: 'Sarah Benali', email: 'sarah.benali@ecole.fr' },
+  { id: 'student_julien', name: 'Julien Morel', email: 'julien.morel@ecole.fr' },
+  { id: 'student_amina', name: 'Amina Karim', email: 'amina.karim@ecole.fr' },
+  { id: 'student_hugo', name: 'Hugo Lemoine', email: 'hugo.lemoine@ecole.fr' },
+  { id: 'student_lina', name: 'Lina Haddad', email: 'lina.haddad@ecole.fr' },
+  { id: 'student_sofiane', name: 'Sofiane Madi', email: 'sofiane.madi@ecole.fr' },
+  { id: 'student_clara', name: 'Clara Perrot', email: 'clara.perrot@ecole.fr' },
+  { id: 'student_leo', name: 'Léo Marques', email: 'leo.marques@ecole.fr' },
+  { id: 'student_selma', name: 'Selma Rami', email: 'selma.rami@ecole.fr' }
+];
+
 // Données mockées pour les établissements
 const INITIAL_SCHOOLS = {
   "school_01": {
     id: "school_01",
-    name: "Lycée Saint-Charles",
-    city: "Montpellier",
-    address: "15 avenue de la République, 34000 Montpellier",
+    name: "Lycée Hoche – Versailles",
+    city: "Versailles",
+    address: "73 avenue de Saint-Cloud, 78000 Versailles",
     director: "Claire Dupont",
     classes: [
-      { id: 'class_term_s1', name: 'Terminale S1', track: 'Scientifique', year: 'Terminale', students: 28 },
-      { id: 'class_term_l', name: 'Terminale L', track: 'Littéraire', year: 'Terminale', students: 25 },
-      { id: 'class_prem_es2', name: 'Première ES2', track: 'Économique & social', year: 'Première', students: 32 },
-      { id: 'class_seconde4', name: 'Seconde 4', track: 'Générale', year: 'Seconde', students: 27 }
+      { id: 'class_term_spe_maths', name: 'Tle2 – Spé Maths', track: 'Scientifique', year: 'Terminale', students: 10 },
+      { id: 'class_term_physique', name: 'Tle3 – Physique-Chimie', track: 'Scientifique', year: 'Terminale', students: 10 },
+      { id: 'class_prem_st2s', name: '1ère ST2S', track: 'Technologique', year: 'Première', students: 10 },
+      { id: 'class_seconde_gen', name: '2nde Générale A', track: 'Générale', year: 'Seconde', students: 10 }
     ],
     teachers: [
-      { id: 'user_martin', name: 'Prof. Martin', email: 'martin@ecole.fr', role: 'Enseignant', className: 'Terminale S1', status: 'actif' },
-      { id: 'user_dubois', name: 'Prof. Dubois', email: 'dubois@ecole.fr', role: 'Enseignant', className: 'Terminale L', status: 'actif' },
-      { id: 'user_bernard', name: 'Prof. Bernard', email: 'bernard@ecole.fr', role: 'Enseignant', className: 'Première ES2', status: 'actif' }
+      { id: 'user_martin', name: 'Prof. Martin', email: 'martin@ecole.fr', role: 'Enseignant', className: 'Tle2 – Spé Maths', status: 'actif' },
+      { id: 'user_dubois', name: 'Prof. Dubois', email: 'dubois@ecole.fr', role: 'Enseignant', className: 'Tle3 – Physique-Chimie', status: 'actif' },
+      { id: 'user_bernard', name: 'Prof. Bernard', email: 'bernard@ecole.fr', role: 'Enseignant', className: '1ère ST2S', status: 'actif' },
+      { id: 'user_lefebvre', name: 'Prof. Lefebvre', email: 'lefebvre@ecole.fr', role: 'Enseignant', className: '2nde Générale A', status: 'actif' }
     ],
     students: [
-      { id: 'student_001', name: 'Élève Sophie', email: 'sophie@ecole.fr', className: 'Terminale S1', status: 'actif' },
-      { id: 'student_002', name: 'Élève Lucas', email: 'lucas@ecole.fr', className: 'Terminale S1', status: 'actif' }
+      // Classe Tle2 – Spé Maths (10 élèves)
+      { id: DEMO_STUDENTS[0].id, name: DEMO_STUDENTS[0].name, email: DEMO_STUDENTS[0].email, className: 'Tle2 – Spé Maths', status: 'actif' },
+      { id: DEMO_STUDENTS[1].id, name: DEMO_STUDENTS[1].name, email: DEMO_STUDENTS[1].email, className: 'Tle2 – Spé Maths', status: 'actif' },
+      { id: DEMO_STUDENTS[2].id, name: DEMO_STUDENTS[2].name, email: DEMO_STUDENTS[2].email, className: 'Tle2 – Spé Maths', status: 'actif' },
+      { id: DEMO_STUDENTS[3].id, name: DEMO_STUDENTS[3].name, email: DEMO_STUDENTS[3].email, className: 'Tle2 – Spé Maths', status: 'actif' },
+      { id: DEMO_STUDENTS[4].id, name: DEMO_STUDENTS[4].name, email: DEMO_STUDENTS[4].email, className: 'Tle2 – Spé Maths', status: 'actif' },
+      { id: DEMO_STUDENTS[5].id, name: DEMO_STUDENTS[5].name, email: DEMO_STUDENTS[5].email, className: 'Tle2 – Spé Maths', status: 'actif' },
+      { id: DEMO_STUDENTS[6].id, name: DEMO_STUDENTS[6].name, email: DEMO_STUDENTS[6].email, className: 'Tle2 – Spé Maths', status: 'actif' },
+      { id: DEMO_STUDENTS[7].id, name: DEMO_STUDENTS[7].name, email: DEMO_STUDENTS[7].email, className: 'Tle2 – Spé Maths', status: 'actif' },
+      { id: DEMO_STUDENTS[8].id, name: DEMO_STUDENTS[8].name, email: DEMO_STUDENTS[8].email, className: 'Tle2 – Spé Maths', status: 'actif' },
+      { id: DEMO_STUDENTS[9].id, name: DEMO_STUDENTS[9].name, email: DEMO_STUDENTS[9].email, className: 'Tle2 – Spé Maths', status: 'actif' }
     ],
     themesPublished: [
-      { id: 'theme_001', title: 'Suites numériques', subject: 'Mathématiques', publishedAt: '2024-11-10' },
-      { id: 'theme_002', title: 'La conscience', subject: 'Philosophie', publishedAt: '2024-11-08' }
+      { id: 'theme_suites_numeriques', title: 'Suites numériques', subject: 'Mathématiques', publishedAt: '2024-11-10' },
+      { id: 'theme_fonctions_derivees', title: 'Fonctions dérivées', subject: 'Mathématiques', publishedAt: '2024-11-08' },
+      { id: 'theme_probabilites', title: 'Probabilités conditionnelles', subject: 'Mathématiques', publishedAt: '2024-11-05' },
+      { id: 'theme_logarithmes', title: 'Logarithmes', subject: 'Mathématiques', publishedAt: '2024-10-28' },
+      { id: 'theme_geometrie', title: 'Géométrie analytique', subject: 'Mathématiques', publishedAt: '2024-10-20' },
+      { id: 'theme_ondes', title: 'Ondes mécaniques', subject: 'Physique-Chimie', publishedAt: '2024-11-12' },
+      { id: 'theme_newton', title: 'Lois de Newton', subject: 'Physique-Chimie', publishedAt: '2024-11-01' },
+      { id: 'theme_photoelectrique', title: 'Effet photoélectrique', subject: 'Physique-Chimie', publishedAt: '2024-10-25' }
     ]
   },
   "school_02": {
@@ -39,17 +69,21 @@ const INITIAL_SCHOOLS = {
     address: "42 rue de la Paix, 69001 Lyon",
     director: "Marie Martin",
     classes: [
-      { id: 'class_term_s2', name: 'Terminale S2', track: 'Scientifique', year: 'Terminale', students: 30 },
-      { id: 'class_prem_s1', name: 'Première S1', track: 'Scientifique', year: 'Première', students: 28 },
-      { id: 'class_seconde1', name: 'Seconde 1', track: 'Générale', year: 'Seconde', students: 26 }
+      { id: 'class_term_s2', name: 'Terminale S2', track: 'Scientifique', year: 'Terminale', students: 10 },
+      { id: 'class_prem_s1', name: 'Première S1', track: 'Scientifique', year: 'Première', students: 10 },
+      { id: 'class_seconde1', name: 'Seconde 1', track: 'Générale', year: 'Seconde', students: 10 }
     ],
     teachers: [
       { id: 'user_petit', name: 'Prof. Petit', email: 'petit@condorcet.fr', role: 'Enseignant', className: 'Terminale S2', status: 'actif' },
       { id: 'user_robert', name: 'Prof. Robert', email: 'robert@condorcet.fr', role: 'Enseignant', className: 'Première S1', status: 'actif' }
     ],
     students: [
-      { id: 'student_003', name: 'Élève Emma', email: 'etudiant@condorcet.fr', className: 'Terminale S2', status: 'actif' },
-      { id: 'student_004', name: 'Élève Thomas', email: 'thomas@condorcet.fr', className: 'Terminale S2', status: 'actif' }
+      // Réutilisation des mêmes élèves pour cohérence (mais dans d'autres classes)
+      { id: DEMO_STUDENTS[0].id, name: DEMO_STUDENTS[0].name, email: DEMO_STUDENTS[0].email, className: 'Terminale S2', status: 'actif' },
+      { id: DEMO_STUDENTS[1].id, name: DEMO_STUDENTS[1].name, email: DEMO_STUDENTS[1].email, className: 'Terminale S2', status: 'actif' },
+      { id: DEMO_STUDENTS[2].id, name: DEMO_STUDENTS[2].name, email: DEMO_STUDENTS[2].email, className: 'Terminale S2', status: 'actif' },
+      { id: DEMO_STUDENTS[3].id, name: DEMO_STUDENTS[3].name, email: DEMO_STUDENTS[3].email, className: 'Terminale S2', status: 'actif' },
+      { id: DEMO_STUDENTS[4].id, name: DEMO_STUDENTS[4].name, email: DEMO_STUDENTS[4].email, className: 'Terminale S2', status: 'actif' }
     ],
     themesPublished: [
       { id: 'theme_003', title: 'Probabilités', subject: 'Mathématiques', publishedAt: '2024-11-12' },

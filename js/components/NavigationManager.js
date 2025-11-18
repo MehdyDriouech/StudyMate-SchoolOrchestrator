@@ -20,7 +20,7 @@ export const NAVIGATION_CONFIG = {
     topNav: [
       { view: 'dashboard-teacher', label: '📊 Dashboard' },
       { view: 'teacher-content', label: '📚 Contenus & Curriculum' },
-      { view: 'teacher-followup', label: '👥 Suivi des élèves' },
+      { view: 'teacher-analytics', label: '📈 Analytics & Suivi' },
       { view: 'timeline-teacher', label: '📅 Timeline' }
     ],
     sidebars: {
@@ -29,9 +29,10 @@ export const NAVIGATION_CONFIG = {
         { route: 'teacher-content/library', label: '📚 Bibliothèque' },
         { route: 'teacher-content/curriculum', label: '📖 Curriculum Builder' }
       ],
-      'teacher-followup': [
-        { route: 'teacher-followup/submissions', label: '📋 Devoirs & Rendus' },
-        { route: 'teacher-followup/social', label: '📊 Analytics / Social Classe' }
+      'teacher-analytics': [
+        { route: 'teacher-analytics/class-summary', label: '📊 Résumé de classe' },
+        { route: 'teacher-analytics/submissions', label: '📋 Devoirs & Rendus' },
+        { route: 'teacher-analytics/social', label: '👥 Social avancé' }
       ]
     }
   },

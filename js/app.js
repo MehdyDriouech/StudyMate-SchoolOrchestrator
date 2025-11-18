@@ -12,6 +12,7 @@ import { setActiveSchoolId, getActiveSchoolId } from './features/features-contro
 import { needsSidebar, getSidebarItems, getParentRoute } from './components/NavigationManager.js';
 import { renderSidebar, removeSidebar } from './components/Sidebar.js';
 import { loadSavedTheme } from './components/UserMenu.js';
+import { showOnboardingModal, shouldShowOnboarding } from './components/OnboardingModal.js';
 
 // État global de l'application
 export const AppState = {
@@ -53,9 +54,7 @@ const VIEWS = {
   'teacher-content/studio': 'view-ai-theme-studio',
   'teacher-content/library': 'view-library',
   'teacher-content/curriculum': 'view-curriculum-builder',
-  'teacher-followup': 'view-teacher-followup',
-  'teacher-followup/submissions': 'view-teacher-submissions',
-  'teacher-followup/social': 'view-teacher-followup-social',
+  'teacher-analytics': 'view-teacher-analytics',
   'director-admin': 'view-director-admin',
   'director-admin/schools': 'view-director-admin-schools',
   'director-admin/classes': 'view-director-admin-classes',
@@ -85,9 +84,10 @@ const VIEW_PERMISSIONS = {
   'teacher-content/studio': ['teacher'],
   'teacher-content/library': ['teacher'],
   'teacher-content/curriculum': ['teacher'],
-  'teacher-followup': ['teacher'],
-  'teacher-followup/submissions': ['teacher'],
-  'teacher-followup/social': ['teacher'],
+  'teacher-analytics': ['teacher'],
+  'teacher-analytics/class-summary': ['teacher'],
+  'teacher-analytics/social': ['teacher'],
+  'teacher-analytics/submissions': ['teacher'],
   'director-admin': ['director'],
   'director-admin/schools': ['director'],
   'director-admin/classes': ['director'],
@@ -216,8 +216,8 @@ function renderView(viewName) {
   
   // Si la route contient un /, c'est une sous-route
   if (actualViewName.includes('/')) {
-    // Utiliser la vue correspondant à la sous-route si elle existe
-    viewId = VIEWS[actualViewName] || VIEWS[parentRoute] || `view-${actualViewName.replace(/\//g, '-')}`;
+    // Utiliser la vue correspondant à la sous-route si elle existe, sinon utiliser la route parente
+    viewId = VIEWS[actualViewName] || VIEWS[parentRoute] || `view-${parentRoute.replace(/\//g, '-')}`;
   } else if (!viewId) {
     viewId = `view-${actualViewName.replace(/\//g, '-')}`;
   }
@@ -239,7 +239,7 @@ function renderView(viewName) {
   if (needsSidebarForRoute && sidebarItems) {
     const layout = document.createElement('div');
     layout.className = 'view-layout-with-sidebar';
-    layout.style.cssText = 'display: flex; height: 100%; min-height: calc(100vh - 200px); position: relative;';
+    layout.style.cssText = 'width: 100%; position: relative;';
     
     // Calculer la hauteur du header
     const header = document.querySelector('.app-header');
@@ -255,7 +255,7 @@ function renderView(viewName) {
     const viewContainer = document.createElement('div');
     viewContainer.id = viewId;
     viewContainer.className = 'view-container';
-    viewContainer.style.cssText = `flex: 1; overflow-y: auto; margin-left: 240px; min-height: calc(100vh - ${headerHeight}px);`;
+    viewContainer.style.cssText = `width: calc(100% - 240px) !important; max-width: calc(100% - 240px) !important; margin-left: 240px !important; overflow-y: auto; min-height: calc(100vh - ${headerHeight}px); padding: 0 !important; box-sizing: border-box !important;`;
     
     layout.appendChild(sidebarContainer);
     layout.appendChild(viewContainer);
@@ -293,8 +293,31 @@ function renderViewContent(viewContainer, viewName, viewId) {
     // Si la fonction n'existe pas et que c'est une sous-route, essayer la route parente
     if (typeof renderFunction !== 'function' && viewName.includes('/')) {
       const parentRoute = getParentRoute(viewName);
+      console.log(`[Router] Fonction ${renderFunctionName} non trouvée, tentative avec la route parente: ${parentRoute}`);
       renderFunctionName = getRenderFunctionName(parentRoute);
       renderFunction = window[renderFunctionName];
+      console.log(`[Router] Fonction parente recherchée: ${renderFunctionName}, trouvée:`, typeof renderFunction === 'function');
+      
+      // Si toujours pas trouvée, attendre un peu et réessayer (pour les modules ES qui se chargent de manière asynchrone)
+      if (typeof renderFunction !== 'function') {
+        const availableFunctions = Object.keys(window).filter(k => k.startsWith('render') && k.endsWith('View'));
+        console.warn(`[Router] Fonction ${renderFunctionName} toujours non trouvée, liste des fonctions disponibles:`, availableFunctions);
+        
+        // Retry après un court délai (pour les modules ES asynchrones)
+        setTimeout(() => {
+          renderFunction = window[renderFunctionName];
+          if (typeof renderFunction === 'function') {
+            console.log(`[Router] Fonction ${renderFunctionName} trouvée après délai, rendu de la vue`);
+            const result = renderFunction(viewContainer, viewName);
+            if (result instanceof Promise) {
+              result.catch(error => {
+                console.error(`[Router] Erreur dans la fonction async ${renderFunctionName}:`, error);
+              });
+            }
+          }
+        }, 100);
+        return; // Sortir pour éviter le rendu d'erreur immédiat
+      }
     }
     
     if (typeof renderFunction === 'function') {
@@ -373,7 +396,9 @@ function getRenderFunctionName(viewName) {
     .split('-')
     .map(segment => capitalize(segment))
     .join('');
-  return `render${pascalCase}View`;
+  const functionName = `render${pascalCase}View`;
+  console.log(`[Router] Nom de fonction généré pour "${viewName}": ${functionName}`);
+  return functionName;
 }
 
 /**
@@ -496,9 +521,18 @@ function initApp() {
       navigateTo(dashboardRoute);
     }
   } else {
-    // Pas d'authentification, afficher l'écran d'auth
-    console.log('[App] Pas d\'authentification, affichage de l\'écran de connexion');
-    navigateTo('auth');
+    // Pas d'authentification, vérifier si on doit afficher la modale d'onboarding
+    if (shouldShowOnboarding()) {
+      console.log('[App] Affichage de la modale d\'onboarding');
+      // Afficher la modale d'onboarding
+      setTimeout(() => {
+        showOnboardingModal();
+      }, 300);
+    } else {
+      // Afficher l'écran d'auth
+      console.log('[App] Pas d\'authentification, affichage de l\'écran de connexion');
+      navigateTo('auth');
+    }
   }
   
   // Écouter les changements d'établissement pour recharger la vue actuelle

@@ -18,7 +18,7 @@ export function renderTeacherSubmissionsView(container) {
   submissionsContainer = container;
   
   container.innerHTML = `
-    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+    <div style="width: 100%; max-width: 100%; margin: 0; padding: 24px; box-sizing: border-box;">
       <div style="text-align: center; padding: 40px; color: var(--muted);">
         Chargement des soumissions...
       </div>
@@ -45,7 +45,7 @@ function renderSubmissionsContent() {
   
   if (!submissions || submissions.length === 0) {
     submissionsContainer.innerHTML = `
-      <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+      <div style="width: 100%; max-width: 100%; margin: 0; padding: 24px; box-sizing: border-box;">
         <div style="margin-bottom: 32px;">
           <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
             📋 Rendus / Corrections
@@ -68,7 +68,7 @@ function renderSubmissionsContent() {
   }
   
   submissionsContainer.innerHTML = `
-    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+    <div style="width: 100%; max-width: 100%; margin: 0; padding: 24px 32px; box-sizing: border-box;">
       <div style="margin-bottom: 32px;">
         <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
           📋 Rendus / Corrections
@@ -79,8 +79,15 @@ function renderSubmissionsContent() {
       </div>
       
       <div class="card">
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; table-layout: fixed;">
+            <colgroup>
+              <col style="width: 25%;">
+              <col style="width: 30%;">
+              <col style="width: 20%;">
+              <col style="width: 12%;">
+              <col style="width: 13%;">
+            </colgroup>
             <thead>
               <tr style="border-bottom: 2px solid var(--card-border);">
                 <th style="padding: 12px; text-align: left;">Élève</th>
@@ -93,14 +100,14 @@ function renderSubmissionsContent() {
             <tbody>
               ${submissions.map(submission => `
                 <tr style="border-bottom: 1px solid var(--card-border);">
-                  <td style="padding: 12px;">
-                    <div style="font-weight: 600;">${escapeHtml(submission.studentName || submission.studentId)}</div>
-                    <div style="font-size: 0.85rem; color: var(--muted);">${escapeHtml(submission.className || submission.classId)}</div>
+                  <td style="padding: 12px; overflow: hidden; text-overflow: ellipsis;">
+                    <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(submission.studentName || submission.studentId)}">${escapeHtml(submission.studentName || submission.studentId)}</div>
+                    <div style="font-size: 0.85rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(submission.className || submission.classId)}">${escapeHtml(submission.className || submission.classId)}</div>
                   </td>
-                  <td style="padding: 12px;">
-                    <div style="font-weight: 600;">${escapeHtml(submission.themeTitle || submission.themeId)}</div>
+                  <td style="padding: 12px; overflow: hidden; text-overflow: ellipsis;">
+                    <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(submission.themeTitle || submission.themeId)}">${escapeHtml(submission.themeTitle || submission.themeId)}</div>
                     ${submission.themeSubject ? `
-                      <div style="font-size: 0.85rem; color: var(--muted);">${escapeHtml(submission.themeSubject)}</div>
+                      <div style="font-size: 0.85rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(submission.themeSubject)}">${escapeHtml(submission.themeSubject)}</div>
                     ` : ''}
                   </td>
                   <td style="padding: 12px; text-align: center; color: var(--muted);">

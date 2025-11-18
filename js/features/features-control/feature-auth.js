@@ -209,6 +209,72 @@ export function getDashboardRoute(role) {
   return routes[role] || 'dashboard-teacher';
 }
 
+/**
+ * Auto-login pour la démo (fake login)
+ * @param {string} role - Rôle à tester ('student', 'teacher', 'director', 'pedago')
+ * @returns {Promise<object>}
+ */
+export async function fakeLogin(role) {
+  console.log('[Auth] Fake login pour le rôle:', role);
+  
+  // Simuler un délai réseau
+  await new Promise(resolve => setTimeout(resolve, 200));
+  
+  // Créer un utilisateur mock selon le rôle
+  const demoUsers = {
+    'student': {
+      role: 'student',
+      email: 'demo.student@ecole.fr',
+      name: 'Nathan Leroy',
+      schoolId: 'school_01'
+    },
+    'teacher': {
+      role: 'teacher',
+      email: 'demo.teacher@ecole.fr',
+      name: 'Professeur Martin',
+      schoolId: 'school_01'
+    },
+    'director': {
+      role: 'director',
+      email: 'demo.director@ecole.fr',
+      name: 'Directeur Dupont',
+      schoolId: 'school_01'
+    },
+    'pedago': {
+      role: 'pedago',
+      email: 'demo.pedago@ecole.fr',
+      name: 'Référent pédagogique',
+      schoolId: 'school_01'
+    }
+  };
+  
+  const user = demoUsers[role];
+  if (!user) {
+    throw new Error(`Rôle invalide: ${role}`);
+  }
+  
+  // Activer le mode démo
+  startDemoSession();
+  
+  // Stocker dans localStorage
+  localStorage.setItem(STORAGE_USER_ROLE, user.role);
+  localStorage.setItem(STORAGE_USER_EMAIL, user.email);
+  localStorage.setItem('SM_SO_USER_SCHOOL_ID', user.schoolId);
+  localStorage.setItem('STUDYMATE_DEMO_STARTED_AT', new Date().toISOString());
+  
+  // Définir l'établissement actif
+  import('../features-control/store-multischool.js').then(({ setActiveSchoolId }) => {
+    setActiveSchoolId(user.schoolId);
+  });
+  
+  console.log('[Auth] ✅ Fake login réussi -', user.role, 'schoolId:', user.schoolId);
+  
+  return {
+    success: true,
+    user
+  };
+}
+
 export default {
   handleDemoLogin,
   handleLogin,
@@ -216,5 +282,6 @@ export default {
   isAuthenticated,
   getCurrentUser,
   getUserRole,
-  getDashboardRoute
+  getDashboardRoute,
+  fakeLogin
 };

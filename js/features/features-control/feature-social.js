@@ -49,21 +49,23 @@ const socialState = {
  */
 const socialStats = {
   "school_01": {
-    "class_term_s1": {
+    "class_term_spe_maths": {
       avgScore: 14.2,
-      medianScore: 13,
+      medianScore: 13.5,
       avgResponseTime: 52,
       topPerformers: [
-        { name: "Nathan", score: 18, time: 40 },
-        { name: "Sarah", score: 17, time: 42 }
+        { name: "Nathan Leroy", score: 18, time: 40 },
+        { name: "Sarah Benali", score: 17, time: 42 },
+        { name: "Julien Morel", score: 16, time: 45 }
       ],
       struggling: [
-        { name: "Omar", score: 9, time: 75 }
+        { name: "Sofiane Madi", score: 9, time: 75 },
+        { name: "Lina Haddad", score: 10, time: 70 }
       ],
       socialDistribution: {
-        top20: 3,
-        middle60: 18,
-        bottom20: 4
+        top20: 2,
+        middle60: 6,
+        bottom20: 2
       }
     },
     "class_term_l": {

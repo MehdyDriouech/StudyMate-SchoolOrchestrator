@@ -167,6 +167,32 @@ html[data-theme="dark"] .app-header {
   align-items: center;
 }
 
+/* Menu utilisateur */
+.user-menu-container {
+  position: relative;
+}
+
+.user-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-menu-dropdown {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Bouton burger menu - caché par défaut sur desktop */
 .burger-menu {
   display: none;
@@ -226,6 +252,39 @@ main {
   max-width: 900px;
   margin: 0 auto;
   padding: 24px 16px 80px;
+}
+
+/* S'assurer que main n'a pas de contrainte dans les vues avec sidebar */
+.view-layout-with-sidebar main,
+.view-layout-with-sidebar #app-root,
+.view-layout-with-sidebar #app-root main {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Forcer #app-root à utiliser toute la largeur quand il contient une sidebar */
+#app-root:has(.view-layout-with-sidebar) {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Forcer le layout avec sidebar à utiliser toute la largeur */
+.view-layout-with-sidebar {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Forcer le view-container à utiliser toute la largeur disponible */
+.view-layout-with-sidebar .view-container {
+  width: calc(100vw - 240px) !important;
+  max-width: calc(100vw - 240px) !important;
+  min-width: 0 !important;
 }
 
 .card {
@@ -2067,5 +2126,401 @@ view-onboarding.closing .onboarding-modal {
   .onboarding-close {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* =========================================
+   MODALE D'ONBOARDING (Nouvelle version)
+   ========================================= */
+
+.onboarding-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.onboarding-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.onboarding-modal-content {
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  max-width: 1200px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-modal-header {
+  position: relative;
+  padding: 32px 32px 16px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.onboarding-modal-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 0 0 8px 0;
+}
+
+.onboarding-modal-subtitle {
+  font-size: 1.1rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.onboarding-modal-close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--card-hover);
+  border-radius: var(--radius-sm);
+  font-size: 1.2rem;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+}
+
+.onboarding-modal-close:hover {
+  background: var(--card-border);
+  color: var(--fg);
+}
+
+.onboarding-modal-body {
+  padding: 24px 32px;
+  flex: 1;
+}
+
+.onboarding-intro {
+  font-size: 1.05rem;
+  color: var(--muted);
+  margin: 0 0 32px 0;
+  line-height: 1.7;
+}
+
+.onboarding-personas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.onboarding-persona-card {
+  background: var(--card);
+  border: 2px solid var(--card-border);
+  border-top: 4px solid;
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+
+.onboarding-persona-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+
+.onboarding-persona-header {
+  margin-bottom: 16px;
+}
+
+.onboarding-persona-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0 0 8px 0;
+}
+
+.onboarding-persona-description {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.onboarding-persona-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  flex: 1;
+}
+
+.onboarding-persona-features li {
+  padding: 8px 0;
+  font-size: 0.95rem;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.onboarding-persona-features li::before {
+  content: '✓';
+  color: var(--accent);
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.onboarding-persona-button {
+  width: 100%;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.onboarding-persona-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.onboarding-persona-button:active {
+  transform: translateY(0);
+}
+
+.onboarding-modal-footer {
+  padding: 16px 32px;
+  border-top: 1px solid var(--card-border);
+  display: flex;
+  justify-content: center;
+}
+
+.onboarding-modal-close-btn {
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--card-hover);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.onboarding-modal-close-btn:hover {
+  background: var(--card-border);
+  color: var(--fg);
+}
+
+/* Responsive pour la modale */
+@media (max-width: 768px) {
+  .onboarding-modal-content {
+    max-width: 100%;
+    max-height: 95vh;
+  }
+
+  .onboarding-modal-header {
+    padding: 24px 24px 16px;
+  }
+
+  .onboarding-modal-title {
+    font-size: 1.5rem;
+    padding-right: 40px;
+  }
+
+  .onboarding-modal-body {
+    padding: 20px 24px;
+  }
+
+  .onboarding-personas-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .onboarding-persona-card {
+    padding: 20px;
+  }
+}
+
+/* =========================================
+   LAYOUT AVEC SIDEBAR
+   ========================================= */
+
+.view-layout-with-sidebar {
+  width: 100%;
+  position: relative;
+}
+
+.view-container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Quand la sidebar est présente, le conteneur de vue doit utiliser toute la largeur disponible */
+/* Note: Cette règle est surchargée plus bas avec 100vw pour forcer la largeur */
+
+/* S'assurer que les conteneurs internes des vues utilisent toute la largeur disponible */
+.view-layout-with-sidebar .view-container > div[style*="max-width"] {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* S'assurer que les cards dans les vues avec sidebar utilisent toute la largeur disponible */
+.view-layout-with-sidebar .view-container .card {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  min-width: 0 !important; /* Permet aux cards dans les grilles de se rétrécir si nécessaire */
+}
+
+/* S'assurer que les grilles utilisent toute la largeur disponible */
+.view-layout-with-sidebar .view-container [style*="grid-template-columns"] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* S'assurer que tous les conteneurs de contenu utilisent toute la largeur */
+.view-layout-with-sidebar .view-container > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Forcer tous les divs enfants directs à utiliser toute la largeur */
+.view-layout-with-sidebar .view-container > div:first-child,
+.view-layout-with-sidebar .view-container > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+}
+
+/* Règle très agressive : forcer tous les éléments dans view-container à utiliser toute la largeur */
+.view-layout-with-sidebar .view-container * {
+  max-width: 100% !important;
+}
+
+/* Sauf pour les éléments qui doivent garder leur largeur intrinsèque */
+.view-layout-with-sidebar .view-container img,
+.view-layout-with-sidebar .view-container canvas,
+.view-layout-with-sidebar .view-container svg {
+  max-width: none !important;
+}
+
+/* Optimiser le padding dans les vues avec sidebar */
+.view-layout-with-sidebar .view-container > div[style*="padding"] {
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  padding-top: 24px !important;
+  padding-bottom: 24px !important;
+}
+
+/* S'assurer que les grilles à 2 colonnes utilisent bien toute la largeur */
+.view-layout-with-sidebar .view-container [style*="grid-template-columns: 1fr 1fr"] {
+  gap: 24px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* S'assurer que les éléments dans les grilles peuvent utiliser toute la largeur */
+.view-layout-with-sidebar .view-container [style*="grid-template-columns"] > * {
+  min-width: 0 !important; /* Permet aux éléments de se rétrécir dans les grilles */
+  width: 100% !important;
+}
+
+/* Pour les tableaux, optimiser l'affichage */
+.view-layout-with-sidebar .view-container table {
+  table-layout: auto;
+  width: 100%;
+}
+
+/* Conteneurs de scroll pour tableaux */
+.view-layout-with-sidebar .view-container [style*="overflow-x"] {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Améliorer le scroll horizontal des tableaux */
+.view-layout-with-sidebar .view-container [style*="overflow-x"] {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+
+.view-layout-with-sidebar .view-container [style*="overflow-x"]::-webkit-scrollbar {
+  height: 8px;
+}
+
+.view-layout-with-sidebar .view-container [style*="overflow-x"]::-webkit-scrollbar-track {
+  background: var(--card-hover);
+  border-radius: 4px;
+}
+
+.view-layout-with-sidebar .view-container [style*="overflow-x"]::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 4px;
+}
+
+.view-layout-with-sidebar .view-container [style*="overflow-x"]::-webkit-scrollbar-thumb:hover {
+  background: var(--fg);
+}
+
+/* Responsive : sur mobile, la sidebar devient horizontale */
+@media (max-width: 768px) {
+  .view-layout-with-sidebar .view-container {
+    width: 100%;
+    margin-left: 0;
+  }
+  
+  .sidebar-container {
+    position: relative !important;
+    width: 100% !important;
+    top: auto !important;
+    bottom: auto !important;
+    height: auto !important;
   }
 }

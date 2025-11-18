@@ -12,56 +12,103 @@ const assignmentsStore = {
  * Initialise le store avec des données mockées pour la démo
  */
 function initStore() {
-  // Données mockées pour tester le catalogue étudiant
   const now = new Date();
-  const pastDate = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000); // -10 jours
-  const futureDate = new Date(now.getTime() + 20 * 24 * 60 * 60 * 1000); // +20 jours
-  const pastDueDate = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000); // -5 jours (date de rendu passée)
-  const futureDueDate = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000); // +15 jours (date de rendu future)
+  const classId = 'class_term_spe_maths'; // Classe principale Tle2 – Spé Maths
   
-  // Assignation passée (annales)
+  // 3 thèmes récents (7 derniers jours)
+  const recent1 = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000); // -2 jours
+  const recent2 = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000); // -4 jours
+  const recent3 = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000); // -6 jours
+  
+  // 2 thèmes anciens (1-2 mois)
+  const old1 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // -30 jours
+  const old2 = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000); // -45 jours
+  
+  // Thèmes récents (actifs)
   assignmentsStore.assignments.push({
-    id: 'assignment_demo_past_001',
-    themeId: 'theme_suites_001', // Thème de la bibliothèque
-    classId: 'terminale_s1',
-    startAt: pastDate.toISOString(),
-    endAt: new Date(pastDate.getTime() + 20 * 24 * 60 * 60 * 1000).toISOString(),
-    dueAt: pastDueDate.toISOString(),
+    id: 'assignment_suites_recent',
+    themeId: 'theme_suites_numeriques',
+    classId: classId,
+    startAt: recent1.toISOString(),
+    endAt: new Date(recent1.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    dueAt: new Date(recent1.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString(),
     status: 'published',
-    createdBy: 'teacher@ecole.fr',
-    createdAt: pastDate.toISOString(),
-    publishedAt: pastDate.toISOString(),
-    updatedAt: pastDate.toISOString()
+    createdBy: 'martin@ecole.fr',
+    createdAt: recent1.toISOString(),
+    publishedAt: recent1.toISOString(),
+    updatedAt: recent1.toISOString()
   });
   
-  // Assignation future (à faire)
   assignmentsStore.assignments.push({
-    id: 'assignment_demo_future_001',
-    themeId: 'theme_derivation_002', // Thème de la bibliothèque
-    classId: 'terminale_s1',
-    startAt: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(), // +5 jours
-    endAt: futureDate.toISOString(),
-    dueAt: futureDueDate.toISOString(),
+    id: 'assignment_fonctions_recent',
+    themeId: 'theme_fonctions_derivees',
+    classId: classId,
+    startAt: recent2.toISOString(),
+    endAt: new Date(recent2.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    dueAt: new Date(recent2.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString(),
     status: 'published',
-    createdBy: 'teacher@ecole.fr',
-    createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    publishedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString()
+    createdBy: 'martin@ecole.fr',
+    createdAt: recent2.toISOString(),
+    publishedAt: recent2.toISOString(),
+    updatedAt: recent2.toISOString()
   });
   
-  // Assignation en cours (à faire)
   assignmentsStore.assignments.push({
-    id: 'assignment_demo_current_001',
-    themeId: 'theme_conscience_003', // Thème de la bibliothèque
-    classId: 'terminale_s1',
-    startAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // -3 jours (déjà commencé)
-    endAt: new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString(), // +10 jours
-    dueAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(), // +7 jours
+    id: 'assignment_probabilites_recent',
+    themeId: 'theme_probabilites',
+    classId: classId,
+    startAt: recent3.toISOString(),
+    endAt: new Date(recent3.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    dueAt: new Date(recent3.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString(),
     status: 'published',
-    createdBy: 'teacher@ecole.fr',
-    createdAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    publishedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString()
+    createdBy: 'martin@ecole.fr',
+    createdAt: recent3.toISOString(),
+    publishedAt: recent3.toISOString(),
+    updatedAt: recent3.toISOString()
+  });
+  
+  // Thèmes anciens (passés)
+  assignmentsStore.assignments.push({
+    id: 'assignment_logarithmes_old',
+    themeId: 'theme_logarithmes',
+    classId: classId,
+    startAt: old1.toISOString(),
+    endAt: new Date(old1.getTime() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+    dueAt: new Date(old1.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'published',
+    createdBy: 'martin@ecole.fr',
+    createdAt: old1.toISOString(),
+    publishedAt: old1.toISOString(),
+    updatedAt: old1.toISOString()
+  });
+  
+  assignmentsStore.assignments.push({
+    id: 'assignment_geometrie_old',
+    themeId: 'theme_geometrie',
+    classId: classId,
+    startAt: old2.toISOString(),
+    endAt: new Date(old2.getTime() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+    dueAt: new Date(old2.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'published',
+    createdBy: 'martin@ecole.fr',
+    createdAt: old2.toISOString(),
+    publishedAt: old2.toISOString(),
+    updatedAt: old2.toISOString()
+  });
+  
+  // Assignation future
+  assignmentsStore.assignments.push({
+    id: 'assignment_ondes_future',
+    themeId: 'theme_ondes',
+    classId: classId,
+    startAt: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    endAt: new Date(now.getTime() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+    dueAt: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'published',
+    createdBy: 'martin@ecole.fr',
+    createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    publishedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString()
   });
   
   console.log('[Store Class Theme Assignments] ✅ Store initialisé avec', assignmentsStore.assignments.length, 'assignations mockées');
