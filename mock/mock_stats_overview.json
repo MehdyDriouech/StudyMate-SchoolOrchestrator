@@ -1,0 +1,50 @@
+{
+  "kpis": {
+    "totalStudents": 245,
+    "totalClasses": 8,
+    "activeAssignments": 23,
+    "completionRate": 78.5,
+    "averageGrade": 13.2
+  },
+  "topSubjects": [
+    {
+      "name": "Mathématiques",
+      "assignmentsCount": 8,
+      "avgCompletion": 82.3
+    },
+    {
+      "name": "Philosophie",
+      "assignmentsCount": 7,
+      "avgCompletion": 71.5
+    },
+    {
+      "name": "Histoire-Géographie",
+      "assignmentsCount": 8,
+      "avgCompletion": 80.1
+    }
+  ],
+  "recentActivity": [
+    {
+      "type": "assignment_completed",
+      "studentName": "Emma L.",
+      "assignmentTitle": "DM - Fonctions exponentielles",
+      "subject": "Mathématiques",
+      "grade": 15,
+      "timestamp": "2024-11-15T14:30:00"
+    },
+    {
+      "type": "assignment_submitted",
+      "studentName": "Lucas M.",
+      "assignmentTitle": "Dissertation - Le bonheur",
+      "subject": "Philosophie",
+      "timestamp": "2024-11-15T11:20:00"
+    },
+    {
+      "type": "assignment_created",
+      "teacherName": "Vous",
+      "assignmentTitle": "Analyse - La Seconde Guerre Mondiale",
+      "subject": "Histoire-Géographie",
+      "timestamp": "2024-11-14T16:45:00"
+    }
+  ]
+}

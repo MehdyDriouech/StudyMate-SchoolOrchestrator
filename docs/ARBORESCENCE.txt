@@ -1,0 +1,108 @@
+StudyMate School Orchestrator - Structure complète
+====================================================
+
+studymate-school-orchestrator/
+│
+├── 📄 index.html                    # Point d'entrée HTML
+├── 📖 README.md                     # Documentation complète
+├── 🚀 DEMARRAGE.md                  # Guide de démarrage rapide
+├── 📋 ARBORESCENCE.txt              # Ce fichier
+│
+├── assets/
+│   └── styles.css                   # Design system (copié d'ErgoMate)
+│
+├── mock/                            # Données de démonstration
+│   ├── mock_stats_overview.json    # KPIs et statistiques dashboard
+│   ├── mock_assignments.json       # 8 devoirs fictifs (lycée)
+│   └── mock_curriculum.json        # Structure des curriculums
+│
+└── js/
+    │
+    ├── 🔧 config.js                 # Configuration globale (DEMO_MODE, etc.)
+    ├── 🚦 app.js                    # Point d'entrée + Routing (hash-based)
+    ├── 📡 app-service.js            # Abstraction API (fetch + FakeRouter)
+    │
+    ├── demo/
+    │   └── FakeRouter.js            # Simulateur d'API avec délai réseau
+    │
+    ├── components/
+    │   ├── DemoBadge.js             # Badge "Mode Démo"
+    │   └── TopNav.js                # Navigation principale responsive
+    │
+    └── features/
+        │
+        ├── features-view/           # Composants de rendu (UI)
+        │   │
+        │   ├── ✅ view-auth.js                      # Écran authentification + Démo
+        │   ├── ✅ view-dashboard-teacher.js         # Dashboard complet avec KPIs
+        │   ├── 🚧 view-curriculum-builder.js       # Stub - Builder de curriculum
+        │   ├── 🚧 view-catalog-library.js          # Stub - Bibliothèque contenus
+        │   ├── 🚧 view-workflow-quality.js         # Stub - Contrôle qualité
+        │   ├── 🚧 view-workflow-annotations.js     # Stub - Annotations
+        │   ├── 🚧 view-workflow-versions.js        # Stub - Gestion versions
+        │   ├── 🚧 view-tenant-admin.js             # Stub - Administration
+        │   └── 🚧 view-onboarding-tour.js          # Stub - Visite guidée
+        │
+        └── features-control/        # Logique métier (Business Logic)
+            │
+            ├── ✅ feature-auth.js                   # Authentification + Login démo
+            ├── ✅ feature-demo-mode.js              # Gestion session démo (localStorage)
+            ├── ✅ feature-dashboard-teacher.js      # Chargement données dashboard
+            ├── 🚧 feature-curriculum-builder.js    # Stub - Logique curriculum
+            ├── 🚧 feature-catalog-library.js       # Stub - Logique catalogue
+            ├── 🚧 feature-workflow-quality.js      # Stub - Logique qualité
+            ├── 🚧 feature-workflow-annotations.js  # Stub - Logique annotations
+            ├── 🚧 feature-workflow-versions.js     # Stub - Logique versions
+            ├── 🚧 feature-tenant-admin.js          # Stub - Logique admin
+            └── 🚧 feature-onboarding-tour.js       # Stub - Logique onboarding
+
+Légende
+-------
+✅ = Feature complète et fonctionnelle
+🚧 = Stub (structure en place, implémentation à venir)
+
+Statistiques
+------------
+- Total fichiers : 31
+- Vues implémentées : 9 (1 complète + 8 stubs)
+- Features control : 10 (3 complètes + 7 stubs)
+- Composants : 2
+- Fichiers JSON : 3
+- Lignes de code : ~2500 (estimation)
+
+Dépendances externes
+--------------------
+- Aucune ! (Vanilla JS pur)
+- Font : Google Fonts (Inter)
+- Design : CSS Variables natif
+
+Points d'entrée clés
+--------------------
+1. index.html → Charge tous les modules
+2. js/app.js → Initialise le routing et l'app
+3. js/app-service.js → Intercepte les appels API
+4. js/demo/FakeRouter.js → Retourne les mocks
+
+Flow d'exécution
+----------------
+1. Chargement index.html
+2. Import des modules ES6
+3. app.js démarre (DOMContentLoaded)
+4. Vérification isDemoSession()
+5. Si pas de session : view-auth
+6. Clic "Découvrir la démo" → startDemoSession()
+7. Reload → isDemoSession() = true
+8. Navigation vers view-dashboard-teacher
+9. Appel api.get('/stats/overview')
+10. FakeRouter intercepte et retourne mock
+11. Rendu du dashboard avec données
+
+Prochaines étapes suggérées
+----------------------------
+1. Tester en local (python -m http.server)
+2. Implémenter les stubs une par une
+3. Ajouter Chart.js pour graphiques
+4. Connecter au vrai backend PHP
+5. Ajouter Service Worker (PWA)
+6. Tests unitaires avec Vitest
+7. CI/CD avec GitHub Actions

@@ -1,0 +1,48 @@
+{
+  "subjects": [
+    {
+      "id": "math-term",
+      "name": "Mathématiques Terminale",
+      "level": "Terminale",
+      "chapters": [
+        {
+          "id": "ch1",
+          "title": "Suites numériques",
+          "progress": 85
+        },
+        {
+          "id": "ch2",
+          "title": "Fonctions exponentielles",
+          "progress": 60
+        },
+        {
+          "id": "ch3",
+          "title": "Probabilités conditionnelles",
+          "progress": 30
+        }
+      ]
+    },
+    {
+      "id": "philo-term",
+      "name": "Philosophie Terminale",
+      "level": "Terminale",
+      "chapters": [
+        {
+          "id": "ch1",
+          "title": "La conscience",
+          "progress": 100
+        },
+        {
+          "id": "ch2",
+          "title": "Le bonheur",
+          "progress": 70
+        },
+        {
+          "id": "ch3",
+          "title": "La vérité",
+          "progress": 40
+        }
+      ]
+    }
+  ]
+}

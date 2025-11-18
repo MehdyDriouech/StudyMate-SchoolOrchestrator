@@ -1,0 +1,98 @@
+[
+  {
+    "id": "assign-001",
+    "title": "DM - Suites numériques",
+    "subject": "Mathématiques",
+    "class": "Terminale S1",
+    "dueDate": "2024-11-25",
+    "status": "active",
+    "submittedCount": 18,
+    "totalStudents": 28,
+    "avgGrade": 12.5,
+    "createdAt": "2024-11-10"
+  },
+  {
+    "id": "assign-002",
+    "title": "Dissertation - La conscience",
+    "subject": "Philosophie",
+    "class": "Terminale L",
+    "dueDate": "2024-11-22",
+    "status": "active",
+    "submittedCount": 22,
+    "totalStudents": 25,
+    "avgGrade": 14.2,
+    "createdAt": "2024-11-08"
+  },
+  {
+    "id": "assign-003",
+    "title": "Analyse de documents - Guerre Froide",
+    "subject": "Histoire-Géographie",
+    "class": "Première ES2",
+    "dueDate": "2024-11-20",
+    "status": "active",
+    "submittedCount": 30,
+    "totalStudents": 32,
+    "avgGrade": 13.8,
+    "createdAt": "2024-11-05"
+  },
+  {
+    "id": "assign-004",
+    "title": "Problèmes - Probabilités",
+    "subject": "Mathématiques",
+    "class": "Première S3",
+    "dueDate": "2024-11-28",
+    "status": "active",
+    "submittedCount": 5,
+    "totalStudents": 30,
+    "avgGrade": null,
+    "createdAt": "2024-11-12"
+  },
+  {
+    "id": "assign-005",
+    "title": "Étude de texte - Descartes",
+    "subject": "Philosophie",
+    "class": "Terminale L",
+    "dueDate": "2024-11-18",
+    "status": "completed",
+    "submittedCount": 25,
+    "totalStudents": 25,
+    "avgGrade": 13.5,
+    "createdAt": "2024-11-01"
+  },
+  {
+    "id": "assign-006",
+    "title": "Carte mentale - Révolution française",
+    "subject": "Histoire-Géographie",
+    "class": "Seconde 4",
+    "dueDate": "2024-11-19",
+    "status": "active",
+    "submittedCount": 20,
+    "totalStudents": 28,
+    "avgGrade": 14.1,
+    "createdAt": "2024-11-07"
+  },
+  {
+    "id": "assign-007",
+    "title": "Exercices - Dérivées",
+    "subject": "Mathématiques",
+    "class": "Première S1",
+    "dueDate": "2024-11-30",
+    "status": "draft",
+    "submittedCount": 0,
+    "totalStudents": 29,
+    "avgGrade": null,
+    "createdAt": "2024-11-13"
+  },
+  {
+    "id": "assign-008",
+    "title": "Rédaction - Mythe et réalité",
+    "subject": "Philosophie",
+    "class": "Terminale ES",
+    "dueDate": "2024-12-05",
+    "status": "active",
+    "submittedCount": 3,
+    "totalStudents": 27,
+    "avgGrade": null,
+    "createdAt": "2024-11-14"
+  }
+]
