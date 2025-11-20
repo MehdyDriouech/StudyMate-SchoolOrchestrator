@@ -132,6 +132,7 @@ Architecture **Vanilla JS ES Modules**, inspirée d’ErgoMate :
 studymate-orchestrator/
 ├── index.html
 ├── style.css
+├── backend/
 ├── js/
 │   ├── app.js
 │   ├── router.js
