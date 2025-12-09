@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Endpoints Tester - StudyMate School Orchestrator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0E1A2B;
+            --bg-darker: #0A1320;
+            --bg-sidebar: #1A2332;
+            --primary-blue: #31A8FF;
+            --primary-orange: #FFB74D;
+            --text-light: #E0E6ED;
+            --text-muted: #8B9DB0;
+            --border-color: #2A3441;
+            --success: #4CAF50;
+            --error: #F44336;
+            --warning: #FF9800;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 1.5rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar .subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section h2 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-darker);
+            color: var(--primary-blue);
+        }
+
+        .nav-item.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+        }
+
+        .header h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            gap: 2rem;
+            overflow-y: auto;
+        }
+
+        /* Left Column - Forms */
+        .left-column {
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .form-section {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary-blue);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .form-group small {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 0.25rem;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .radio-group input[type="radio"] {
+            width: auto;
+            margin-right: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2598E6;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #D32F2F;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #388E3C;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Preset List */
+        .preset-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .preset-item {
+            padding: 1rem;
+            background: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-item:hover {
+            border-color: var(--primary-blue);
+            background: rgba(49, 168, 255, 0.1);
+        }
+
+        .preset-item .preset-method {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .preset-item .preset-path {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .preset-item .preset-description {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Right Column - JSON Viewer */
+        .right-column {
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .json-viewer {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .json-viewer h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary-orange);
+        }
+
+        .json-content {
+            flex: 1;
+            background: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .json-content.empty {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .status-success {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+
+        .status-error {
+            background: rgba(244, 67, 54, 0.2);
+            color: var(--error);
+        }
+
+        .status-pending {
+            background: rgba(255, 183, 77, 0.2);
+            color: var(--primary-orange);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            max-width: 400px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--error);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Test Results */
+        .test-results-container {
+            margin-top: 1.5rem;
+            background: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .test-results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .test-results-header h4 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-orange);
+            margin: 0;
+        }
+
+        .test-results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .test-results-table th,
+        .test-results-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .test-results-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-sidebar);
+        }
+
+        .test-results-table td {
+            color: var(--text-light);
+        }
+
+        .test-status-ok {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .test-status-forbidden {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .test-status-unauthorized {
+            color: var(--error);
+            font-weight: 600;
+        }
+
+        .test-status-error {
+            color: var(--error);
+            font-weight: 600;
+        }
+
+        .test-detail {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .btn-test {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        .btn-test-play {
+            background: var(--primary-orange);
+            color: white;
+        }
+
+        .btn-test-play:hover {
+            background: #E68900;
+        }
+
+        .btn-test-run {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-test-run:hover {
+            background: #388E3C;
+        }
+
+        .test-loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--text-muted);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Tabs System */
+        .tabs-container {
+            margin-bottom: 1rem;
+        }
+
+        .tabs-header {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 1rem;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.25rem;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            margin-bottom: -2px;
+        }
+
+        .tab-button:hover {
+            color: var(--text-light);
+            background: rgba(49, 168, 255, 0.1);
+        }
+
+        .tab-button.active {
+            color: var(--primary-blue);
+            border-bottom-color: var(--primary-blue);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .content-area {
+                flex-direction: column;
+            }
+
+            .left-column,
+            .right-column {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h1>SMSO</h1>
+        <p class="subtitle">StudyMate School Orchestrator</p>
+        
+        <div class="nav-section">
+            <h2>Navigation</h2>
+            <div class="nav-item active" onclick="showSection('auth')" id="nav-auth">
+                🔐 Authentification
+            </div>
+            <div class="nav-item" onclick="showSection('sandbox')" id="nav-sandbox">
+                🧪 Sandbox
+            </div>
+        </div>
+        <div class="nav-section" id="nav-features-section">
+            <h2>Features</h2>
+            <div id="nav-features-list"></div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div style="background: var(--warning); color: white; padding: 1rem 2rem; border-bottom: 1px solid var(--border-color);">
+            <strong>⚠️ Cette page est obsolète</strong> - Utiliser plutôt <a href="test/index.html" style="color: white; text-decoration: underline;">/backend/ui/test/index.html</a> (nouvelle interface unifiée)
+        </div>
+        <header class="header">
+            <h2>API Endpoints Tester</h2>
+        </header>
+
+        <div class="content-area">
+            <!-- Left Column - Forms -->
+            <div class="left-column" id="content-left">
+                <!-- Section Authentification -->
+                <div id="section-auth">
+                    <!-- Login Form -->
+                    <div class="form-section">
+                        <h3>🔐 Connexion</h3>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="auth-email" placeholder="directeur@ecole.fr" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mot de passe *</label>
+                            <input type="password" id="auth-password" placeholder="••••••••" required>
+                        </div>
+                        <button class="btn btn-primary" onclick="performLogin()">
+                            Se connecter
+                        </button>
+                    </div>
+
+                    <!-- Token Info -->
+                    <div class="form-section" id="token-info-section" style="display: none;">
+                        <h3>✅ Token actif</h3>
+                        <div class="form-group">
+                            <label>Token (masqué)</label>
+                            <input type="text" id="token-display" readonly style="font-family: monospace; font-size: 0.8rem;">
+                        </div>
+                        <div class="form-group">
+                            <label>Utilisateur</label>
+                            <input type="text" id="user-display" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Mode d'envoi du token</label>
+                            <div class="radio-group">
+                            <label>
+                                    <input type="radio" name="token-mode" value="query" checked>
+                                    Query ?token= (recommandé)
+                                </label>
+                                <label>
+                                    <input type="radio" name="token-mode" value="header">
+                                Header Authorization Bearer
+                            </label>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger" onclick="clearToken()">
+                            Déconnexion
+                        </button>
+                    </div>
+                    </div>
+
+                <!-- Sections de features (générées dynamiquement) -->
+                <div id="feature-sections-container"></div>
+
+                <!-- Section Sandbox -->
+                <div id="section-sandbox" style="display: none;">
+                    <div class="form-section">
+                        <h3>🧪 Sandbox libre</h3>
+                        <div class="form-group">
+                            <label>Méthode HTTP *</label>
+                            <select id="sandbox-method">
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
+                                <option value="DELETE">DELETE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Chemin de l'endpoint *</label>
+                            <input type="text" id="sandbox-path" placeholder="/stats/overview" required>
+                            <small>Le chemin sera automatiquement préfixé par l'URL de base de l'API</small>
+                        </div>
+                    <div class="form-group">
+                            <label>Body (JSON)</label>
+                            <textarea id="sandbox-body" placeholder='{"key": "value"}'></textarea>
+                            <small>Laissez vide pour GET/DELETE. Format JSON pour POST/PUT.</small>
+                    </div>
+                    <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="sandbox-use-auth" checked>
+                                Utiliser l'authentification (token automatique)
+                            </label>
+                    </div>
+                        <button class="btn btn-primary" onclick="sendSandboxRequest()">
+                            Envoyer la requête
+                    </button>
+                </div>
+                </div>
+            </div>
+
+            <!-- Right Column - JSON Viewer -->
+            <div class="right-column">
+                <div class="json-viewer">
+                    <h3>📊 Réponse JSON</h3>
+                    <div id="status-badge"></div>
+                    <div class="json-content empty" id="json-output">
+                        Aucune requête effectuée. Utilisez les formulaires à gauche pour tester l'API.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        // Configuration
+        const API_BASE_URL = '/SMSO/backend/public/api';
+        const AUTH_SESSION_KEY = 'smso_auth_session';
+        const TOKEN_TRANSPORT_DEFAULT = 'query'; // Mode query par défaut
+
+        // Configuration des features avec leurs endpoints
+        // Structure modulaire : ajoutez simplement une nouvelle feature ici pour l'exposer automatiquement
+        const FEATURE_TABS = [
+            {
+                id: 'stats',
+                label: 'Stats',
+                icon: '📊',
+                endpoints: [
+                    {
+                        id: 'stats-overview',
+                        label: 'Dashboard global',
+                        method: 'GET',
+                        path: '/stats/overview',
+                        body: '',
+                        description: 'Vue exécutive des indicateurs pour un établissement.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'stats-schools',
+                        label: 'Analytics multi-écoles',
+                        method: 'GET',
+                        path: '/stats/schools',
+                        body: '',
+                        description: 'Retourne les indicateurs clés agrégés par établissement pour les dashboards direction. Rôles: director, pedago uniquement.',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'assignments',
+                label: 'Assignments',
+                icon: '📋',
+                endpoints: [
+                    {
+                        id: 'assignments-list',
+                        label: 'Liste des assignments (Admin)',
+                        method: 'GET',
+                        path: '/assignments',
+                        body: '',
+                        description: 'Liste tous les assignments visibles pour l\'utilisateur courant (filtrage par rôle).',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'assignments-sync',
+                        label: '🚨 Simuler ErgoMate Sync',
+                        method: 'GET',
+                        path: '/assignments/sync',
+                        body: '',
+                        description: 'Simule la synchronisation pour l\'app ErgoMate. Retourne uniquement les assignments publiés (status="published") pour les classes de l\'étudiant. Format strict: title, date, matiere, description, available_at.',
+                        requiresAuth: true,
+                        note: '⚠️ Simule la vue Student App. Ne montre que les assignments publiés dans le format JSON spécifique.'
+                    },
+                    {
+                        id: 'assignments-get',
+                        label: 'Récupérer un assignment',
+                        method: 'GET',
+                        path: '/assignments/1',
+                        body: '',
+                        description: 'Récupère un assignment par ID.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'assignments-create',
+                        label: 'Créer un assignment',
+                        method: 'POST',
+                        path: '/assignments',
+                        body: JSON.stringify({
+                            class_id: 1,
+                            title: 'Math Homework 1',
+                            description: 'Exercises 1 to 10 from chapter 3. Show all your work.',
+                            subject: 'Mathematics',
+                            due_date: '2025-11-25T23:59:59Z',
+                            available_at: '2025-11-20T08:00:00Z',
+                            status: 'draft'
+                        }, null, 2),
+                        description: 'Création d\'un nouvel assignment avec tous les champs (title, description, subject, due_date, available_at, status). Rôles: teacher/pedago.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'assignments-publish',
+                        label: 'Publier un assignment',
+                        method: 'PUT',
+                        path: '/assignments/1',
+                        body: JSON.stringify({
+                            status: 'published'
+                        }, null, 2),
+                        description: 'Change le statut d\'un assignment de "draft" à "published" pour qu\'il apparaisse dans la sync ErgoMate.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'assignments-update',
+                        label: 'Mettre à jour un assignment',
+                        method: 'PUT',
+                        path: '/assignments/1',
+                        body: JSON.stringify({
+                            title: 'Math Homework 1 - Updated',
+                            description: 'Exercises 1 to 15 from chapter 3 and 4.',
+                            due_date: '2025-11-30T23:59:59Z',
+                            available_at: '2025-11-25T08:00:00Z'
+                        }, null, 2),
+                        description: 'Mise à jour d\'un assignment existant (teacher/pedago).',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'assignments-delete',
+                        label: 'Supprimer un assignment',
+                        method: 'DELETE',
+                        path: '/assignments/1',
+                        body: '',
+                        description: 'Suppression d\'un assignment (teacher/pedago).',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'curriculum',
+                label: 'Curriculum',
+                icon: '📚',
+                endpoints: [
+                    {
+                        id: 'curriculum-overview',
+                        label: 'Vue globale du curriculum',
+                        method: 'GET',
+                        path: '/curriculum',
+                        body: '',
+                        description: 'Récupère le curriculum complet avec toutes les matières et leurs chapitres.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'curriculum-subjects',
+                        label: 'Liste des matières',
+                        method: 'GET',
+                        path: '/curriculum/subjects',
+                        body: '',
+                        description: 'Liste toutes les matières du curriculum avec un résumé (nombre de chapitres, progression moyenne).',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'curriculum-subject-by-id',
+                        label: 'Récupérer une matière',
+                        method: 'GET',
+                        path: '/curriculum/subjects/math-term',
+                        body: '',
+                        description: 'Récupère une matière spécifique avec tous ses chapitres. Exemple: math-term, philo-term.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'curriculum-chapter-by-id',
+                        label: 'Récupérer un chapitre',
+                        method: 'GET',
+                        path: '/curriculum/subjects/math-term/chapters/ch1',
+                        body: '',
+                        description: 'Récupère un chapitre spécifique d\'une matière. Exemple: math-term/ch1, philo-term/ch2.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'curriculum-update-chapter',
+                        label: 'Mettre à jour la progression',
+                        method: 'PUT',
+                        path: '/curriculum/subjects/math-term/chapters/ch1',
+                        body: JSON.stringify({
+                            progress: 90
+                        }, null, 2),
+                        description: 'Met à jour la progression d\'un chapitre (0-100). Réservé aux rôles teacher, pedago, director.',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'aiThemes',
+                label: 'AI Themes',
+                icon: '🤖',
+                endpoints: [
+                    {
+                        id: 'ai-themes-generate',
+                        label: 'Générer un thème IA',
+                        method: 'POST',
+                        path: '/ai/themes/generate',
+                        body: JSON.stringify({
+                            title: 'Math appliqués - Suites numériques',
+                            description: 'Introduction aux suites arithmétiques et géométriques.',
+                            classes: [{ id: 'terminale_2_spe_math', label: 'Terminale 2 – spé Maths' }],
+                            contentTypes: {
+                                quiz: true,
+                                flashcards: true,
+                                revision_sheet: true
+                            }
+                        }, null, 2),
+                        description: 'Génère un thème IA avec quiz, flashcards et fiche de révision.',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'social',
+                label: 'Social Stats',
+                icon: '👥',
+                endpoints: [
+                    {
+                        id: 'social-stats-list',
+                        label: 'Liste des stats sociales',
+                        method: 'GET',
+                        path: '/social/stats',
+                        body: '',
+                        description: 'Récupère les stats sociales de l\'établissement.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'social-stats-get',
+                        label: 'Récupérer une stat sociale',
+                        method: 'GET',
+                        path: '/social/stats/1',
+                        body: '',
+                        description: 'Récupère une stat sociale par ID.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'social-stats-create',
+                        label: 'Créer/Mettre à jour une stat sociale',
+                        method: 'POST',
+                        path: '/social/stats',
+                        body: JSON.stringify({
+                            class_id: 1,
+                            metric_date: '2025-10-23',
+                            collaboration_score: 85.5,
+                            participation_rate: 92.0,
+                            engagement_level: 'high',
+                            notes: 'Très bonne dynamique de groupe cette semaine'
+                        }, null, 2),
+                        description: 'Crée ou met à jour une stat sociale pour une classe (teacher/pedago).',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'social-stats-update',
+                        label: 'Mettre à jour une stat sociale',
+                        method: 'PUT',
+                        path: '/social/stats/1',
+                        body: JSON.stringify({
+                            collaboration_score: 88.0,
+                            participation_rate: 95.0,
+                            engagement_level: 'high'
+                        }, null, 2),
+                        description: 'Met à jour une stat sociale existante (teacher/pedago).',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'social-stats-delete',
+                        label: 'Supprimer une stat sociale',
+                        method: 'DELETE',
+                        path: '/social/stats/1',
+                        body: '',
+                        description: 'Supprime une stat sociale (teacher/pedago).',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'socialEntries',
+                label: 'Social Entries',
+                icon: '⚙️',
+                endpoints: [
+                    {
+                        id: 'social-entries-list',
+                        label: 'Liste des entrées sociales',
+                        method: 'GET',
+                        path: '/social',
+                        body: '',
+                        description: 'Récupère toutes les entrées sociales visibles (configurations, règles, messages). Tous les rôles authentifiés peuvent lire.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'social-entries-get',
+                        label: 'Récupérer une entrée sociale',
+                        method: 'GET',
+                        path: '/social/1',
+                        body: '',
+                        description: 'Récupère une entrée sociale par ID.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'social-entries-create',
+                        label: 'Créer une entrée sociale',
+                        method: 'POST',
+                        path: '/social',
+                        body: JSON.stringify({
+                            type: 'rule',
+                            title: 'Classement hebdomadaire activé',
+                            description: 'Les scores de cette semaine comptent pour le classement social.',
+                            payload: { ranking_period: 'week', enabled: true }
+                        }, null, 2),
+                        description: 'Crée une nouvelle entrée sociale (rule, message, config). Rôles: director, admin, pedago.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'social-entries-update',
+                        label: 'Modifier une entrée sociale',
+                        method: 'PUT',
+                        path: '/social/1',
+                        body: JSON.stringify({
+                            title: 'Classement hebdomadaire activé (modifié)',
+                            description: 'Description mise à jour'
+                        }, null, 2),
+                        description: 'Met à jour une entrée sociale. RÉSERVÉ AU DIRECTEUR UNIQUEMENT.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'social-entries-delete',
+                        label: 'Supprimer une entrée sociale',
+                        method: 'DELETE',
+                        path: '/social/1',
+                        body: '',
+                        description: 'Supprime une entrée sociale. RÉSERVÉ AU DIRECTEUR UNIQUEMENT.',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'themes',
+                label: 'Themes',
+                icon: '📚',
+                endpoints: [
+                    {
+                        id: 'themes-list',
+                        label: 'Liste des thèmes',
+                        method: 'GET',
+                        path: '/themes',
+                        body: '',
+                        description: 'Liste tous les thèmes selon le rôle de l\'utilisateur.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'themes-get',
+                        label: 'Récupérer un thème',
+                        method: 'GET',
+                        path: '/themes/1',
+                        body: '',
+                        description: 'Récupère un thème par ID avec ses questions et révision.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'themes-create',
+                        label: 'Créer un thème',
+                        method: 'POST',
+                        path: '/themes',
+                        body: JSON.stringify({
+                            title: 'Titre du thème',
+                            description: 'Description concise (1-2 phrases)',
+                            tags: ['tag1', 'tag2', 'tag3'],
+                            subject: 'Maths',
+                            type: 'quiz',
+                            status: 'draft',
+                            source: 'manual',
+                            questions: [
+                                {
+                                    id: 'q001',
+                                    type: 'mcq',
+                                    prompt: 'Question ?',
+                                    choices: [
+                                        { id: 'a', label: 'Option A' },
+                                        { id: 'b', label: 'Option B' },
+                                        { id: 'c', label: 'Option C' },
+                                        { id: 'd', label: 'Option D' }
+                                    ],
+                                    answer: 'a',
+                                    rationale: 'Explication détaillée',
+                                    tags: ['concept']
+                                }
+                            ],
+                            revision: {
+                                sections: [
+                                    {
+                                        id: 'section_001',
+                                        title: 'Titre section',
+                                        order: 1,
+                                        cards: [
+                                            {
+                                                id: 'rev_summary_001',
+                                                type: 'summary',
+                                                title: 'Titre résumé',
+                                                content: 'Contenu',
+                                                items: [{ title: 'Item', content: 'Description' }],
+                                                keyPoints: ['Point 1', 'Point 2'],
+                                                tags: ['synthèse'],
+                                                relatedQuestions: ['q001']
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }, null, 2),
+                        description: 'Crée un nouveau thème manuel (teacher/pedago).',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'themes-update',
+                        label: 'Mettre à jour un thème',
+                        method: 'PUT',
+                        path: '/themes/1',
+                        body: JSON.stringify({
+                            title: 'Titre modifié',
+                            description: 'Description mise à jour',
+                            tags: ['tag1', 'tag2'],
+                            status: 'published'
+                        }, null, 2),
+                        description: 'Met à jour un thème existant (teacher/pedago).',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'themes-delete',
+                        label: 'Supprimer un thème',
+                        method: 'DELETE',
+                        path: '/themes/1',
+                        body: '',
+                        description: 'Supprime un thème (teacher/pedago).',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'themes-generate',
+                        label: 'Générer un thème IA',
+                        method: 'POST',
+                        path: '/themes/generate',
+                        body: JSON.stringify({
+                            title: 'Math appliqués - Suites numériques',
+                            description: 'Introduction aux suites arithmétiques et géométriques.',
+                            subject: 'Maths',
+                            tags: ['maths', 'suites', 'terminale']
+                        }, null, 2),
+                        description: 'Génère un thème via IA avec questions et révision (teacher/pedago).',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'themes-import',
+                        label: 'Importer un thème depuis PDF',
+                        method: 'POST',
+                        path: '/themes/import',
+                        body: JSON.stringify({
+                            title: 'Thème importé depuis PDF',
+                            description: 'Thème importé depuis un fichier PDF',
+                            file_name: 'document.pdf',
+                            subject: 'Maths',
+                            tags: ['import', 'pdf']
+                        }, null, 2),
+                        description: 'Importe un thème depuis un PDF (mock, teacher/pedago).',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'themes-reviews-list',
+                        label: 'Liste des reviews d\'un thème',
+                        method: 'GET',
+                        path: '/themes/1/reviews',
+                        body: '',
+                        description: 'Récupère l\'historique des reviews (audit qualité) d\'un thème. Tous les rôles authentifiés peuvent consulter.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'themes-reviews-create',
+                        label: 'Créer une review (audit qualité)',
+                        method: 'POST',
+                        path: '/themes/1/reviews',
+                        body: JSON.stringify({
+                            action: 'approved',
+                            comment: 'Cohérent avec le référentiel P2, RAS.'
+                        }, null, 2),
+                        description: 'Crée une review pour un thème. Actions possibles: submitted, approved, rejected, needs_changes. Rôles: teacher, pedago, director.',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'classes',
+                label: 'Classes',
+                icon: '🏫',
+                endpoints: [
+                    {
+                        id: 'classes-list',
+                        label: 'Liste des classes',
+                        method: 'GET',
+                        path: '/classes',
+                        body: '',
+                        description: 'Liste toutes les classes de l\'établissement de l\'utilisateur.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'classes-get',
+                        label: 'Récupérer une classe',
+                        method: 'GET',
+                        path: '/classes/1',
+                        body: '',
+                        description: 'Récupère les informations d\'une classe par ID.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'classes-students',
+                        label: 'Étudiants d\'une classe',
+                        method: 'GET',
+                        path: '/classes/1/students',
+                        body: '',
+                        description: 'Récupère la liste des étudiants d\'une classe.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'students-get',
+                        label: 'Récupérer un étudiant',
+                        method: 'GET',
+                        path: '/students/10',
+                        body: '',
+                        description: 'Récupère les informations d\'un étudiant par ID.',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'submissions',
+                label: 'Submissions',
+                icon: '📝',
+                endpoints: [
+                    {
+                        id: 'submissions-create',
+                        label: 'Envoyer une soumission (ErgoMate)',
+                        method: 'POST',
+                        path: '/submissions',
+                        body: JSON.stringify({
+                            assignment_id: 1,
+                            student_id: 10,
+                            score: 85.5,
+                            duration: 300,
+                            responses: {
+                                question_1: { answer: 'a', time_spent: 30 },
+                                question_2: { answer: true, time_spent: 20 }
+                            }
+                        }, null, 2),
+                        description: 'Crée ou met à jour une soumission d\'un étudiant pour un assignment. Utilisé par l\'app ErgoMate. Si l\'utilisateur est un étudiant, student_id est automatiquement dérivé du token.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'assignments-submissions',
+                        label: 'Gradebook - Voir les soumissions',
+                        method: 'GET',
+                        path: '/assignments/1/submissions',
+                        body: '',
+                        description: 'Récupère toutes les soumissions pour un assignment (vue gradebook pour les enseignants). Retourne tous les étudiants de la classe avec leur statut (submitted/pending), score, et détails.',
+                        requiresAuth: true
+                    }
+                ]
+            }
+        ];
+
+        /**
+         * Récupère la session d'authentification depuis localStorage
+         * @returns {object|null} Session avec token, user, expires_in
+         */
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch (error) {
+                console.error('[TestEndpoint] Erreur lors de la lecture de la session:', error);
+                return null;
+            }
+        }
+
+        /**
+         * Récupère le token d'authentification actuel
+         * @returns {string|null} Token JWT ou null
+         */
+        function getCurrentToken() {
+            const session = getAuthSession();
+            return session?.token || null;
+        }
+
+        /**
+         * Sauvegarde la session d'authentification dans localStorage
+         * @param {object} session - Session avec token, user, expires_in
+         */
+        function saveAuthSession(session) {
+            try {
+                localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+                console.log('[TestEndpoint] Session sauvegardée');
+            } catch (error) {
+                console.error('[TestEndpoint] Erreur lors de la sauvegarde de la session:', error);
+            }
+        }
+
+        /**
+         * Efface la session d'authentification
+         */
+        function clearAuthSession() {
+            try {
+                localStorage.removeItem(AUTH_SESSION_KEY);
+                console.log('[TestEndpoint] Session effacée');
+            } catch (error) {
+                console.error('[TestEndpoint] Erreur lors de l\'effacement de la session:', error);
+            }
+        }
+
+        /**
+         * Affiche une notification
+         * @param {string} message - Message à afficher
+         * @param {string} type - Type de notification (success, error, warning)
+         */
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        /**
+         * Gère les erreurs HTTP, notamment les 401 (Unauthorized)
+         * @param {Response} response - Réponse HTTP
+         * @returns {Promise<void>}
+         */
+        async function handleHttpError(response) {
+            if (response.status === 401) {
+                console.warn('[TestEndpoint] Erreur 401 - Session expirée');
+                
+                // Effacer la session
+                clearAuthSession();
+                
+                // Masquer les sections de token
+                document.getElementById('token-info-section').style.display = 'none';
+                
+                // Afficher un message
+                showNotification('Session expirée, veuillez vous reconnecter', 'error');
+                
+                // Rediriger vers l'onglet auth après 2 secondes
+                setTimeout(() => {
+                    showSection('auth');
+                }, 2000);
+                
+                throw new Error('Session expirée');
+            }
+        }
+
+        /**
+         * Envoie une requête authentifiée
+         * @param {string} method - Méthode HTTP
+         * @param {string} path - Chemin de l'endpoint
+         * @param {object} options - Options de la requête (headers, body, etc.)
+         * @returns {Promise<Response>}
+         */
+        async function sendAuthedRequest(method, path, options = {}) {
+            const token = getCurrentToken();
+            if (!token) {
+                throw new Error('Aucun token disponible. Veuillez vous connecter.');
+            }
+
+            const tokenMode = document.querySelector('input[name="token-mode"]:checked')?.value || TOKEN_TRANSPORT_DEFAULT;
+            const headers = { ...options.headers };
+
+            // Construire l'URL
+            let url = path.startsWith('http') ? path : `${API_BASE_URL}${path.startsWith('/') ? path : '/' + path}`;
+
+            if (tokenMode === 'header') {
+                headers['Authorization'] = `Bearer ${token}`;
+            } else {
+                // Ajouter le token dans l'URL (mode query par défaut)
+                const separator = url.includes('?') ? '&' : '?';
+                url = `${url}${separator}token=${encodeURIComponent(token)}`;
+            }
+
+            const response = await fetch(url, {
+                method,
+                headers,
+                ...options
+            });
+
+            // Gérer les erreurs HTTP (notamment 401)
+            await handleHttpError(response);
+
+            return response;
+        }
+
+        /**
+         * Effectue le login
+         */
+        async function performLogin() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+
+            if (!email || !password) {
+                showNotification('Veuillez remplir tous les champs', 'error');
+                updateJsonViewer({ success: false, error: 'Veuillez remplir tous les champs' }, 'error', 400);
+                return;
+            }
+
+            updateJsonViewer(null, 'pending');
+
+            try {
+                // POST /api/auth/login avec URL-encoded
+                const body = new URLSearchParams({ email, password });
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: body.toString()
+                });
+
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    updateJsonViewer(
+                        {
+                            success: false,
+                            error: 'Réponse non-JSON reçue',
+                            raw_response: text.substring(0, 500),
+                            status: response.status
+                        },
+                        'error',
+                        response.status
+                    );
+                    return;
+                }
+
+                updateJsonViewer(data, response.ok ? 'success' : 'error', response.status);
+
+                if (response.ok && data.success && data.data && data.data.token) {
+                    const { token, user, expires_in } = data.data;
+                    
+                    // Sauvegarder la session complète dans localStorage
+                    saveAuthSession({
+                        token,
+                        user,
+                        expires_in,
+                        expires_at: expires_in ? Date.now() + (expires_in * 1000) : null
+                    });
+                    
+                    // Afficher les sections de token
+                    document.getElementById('token-info-section').style.display = 'block';
+                    document.getElementById('token-display').value = token.substring(0, 50) + '...';
+                    document.getElementById('user-display').value = user.email || user.full_name || 'Utilisateur';
+                    
+                    showNotification('Connexion réussie', 'success');
+                } else {
+                    showNotification(data.error || 'Erreur de connexion', 'error');
+                }
+            } catch (error) {
+                showNotification('Erreur réseau: ' + error.message, 'error');
+                updateJsonViewer({ success: false, error: error.message }, 'error', 500);
+            }
+        }
+
+        /**
+         * Efface le token
+         */
+        function clearToken() {
+            clearAuthSession();
+            document.getElementById('token-info-section').style.display = 'none';
+            document.getElementById('auth-email').value = '';
+            document.getElementById('auth-password').value = '';
+            showNotification('Déconnexion réussie', 'success');
+            updateJsonViewer({ message: 'Token supprimé' }, 'success');
+        }
+
+        /**
+         * Affiche une section
+         * @param {string} section - Nom de la section (auth, sandbox, ou id d'une feature)
+         */
+        function showSection(section) {
+            // Masquer toutes les sections
+            document.getElementById('section-auth').style.display = 'none';
+            document.getElementById('section-sandbox').style.display = 'none';
+            document.querySelectorAll('.feature-section').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Retirer la classe active de tous les nav-items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Afficher la section demandée
+            if (section === 'auth') {
+                document.getElementById('section-auth').style.display = 'block';
+                document.getElementById('nav-auth').classList.add('active');
+            } else if (section === 'sandbox') {
+                document.getElementById('section-sandbox').style.display = 'block';
+                document.getElementById('nav-sandbox').classList.add('active');
+            } else {
+                // Section de feature
+                const featureSection = document.getElementById(`section-feature-${section}`);
+                const navItem = document.getElementById(`nav-feature-${section}`);
+                if (featureSection) {
+                    featureSection.style.display = 'block';
+                }
+                if (navItem) {
+                    navItem.classList.add('active');
+                }
+            }
+        }
+
+        /**
+         * Remplit la sandbox depuis un preset
+         * @param {object} preset - Preset d'endpoint
+         */
+        function fillSandboxFromPreset(preset) {
+            document.getElementById('sandbox-method').value = preset.method;
+            document.getElementById('sandbox-path').value = preset.path;
+            if (preset.body) {
+                const bodyObj = typeof preset.body === 'string' ? JSON.parse(preset.body) : preset.body;
+                document.getElementById('sandbox-body').value = JSON.stringify(bodyObj, null, 2);
+            } else {
+                document.getElementById('sandbox-body').value = '';
+            }
+            document.getElementById('sandbox-use-auth').checked = preset.requiresAuth !== false;
+            
+            // Basculer vers la sandbox
+            showSection('sandbox');
+            
+            showNotification('Preset chargé dans la sandbox', 'success');
+        }
+
+        /**
+         * Envoie une requête depuis la sandbox
+         */
+        async function sendSandboxRequest() {
+            const method = document.getElementById('sandbox-method').value;
+            const path = document.getElementById('sandbox-path').value.trim();
+            const bodyText = document.getElementById('sandbox-body').value.trim();
+            const useAuth = document.getElementById('sandbox-use-auth').checked;
+
+            if (!path) {
+                showNotification('Veuillez entrer un chemin d\'endpoint', 'error');
+                return;
+            }
+
+            updateJsonViewer(null, 'pending');
+
+            try {
+                let requestOptions = {
+                    method,
+                    headers: {}
+                };
+
+                // Gérer le body pour POST/PUT
+                if ((method === 'POST' || method === 'PUT') && bodyText) {
+                    try {
+                        const bodyObj = JSON.parse(bodyText);
+                        requestOptions.body = JSON.stringify(bodyObj);
+                        requestOptions.headers['Content-Type'] = 'application/json';
+                } catch (e) {
+                    updateJsonViewer(
+                            { success: false, error: 'Body JSON invalide: ' + e.message },
+                        'error',
+                            400
+                    );
+                    return;
+                    }
+                }
+
+                // Envoyer la requête (authentifiée ou non)
+                const response = useAuth && getCurrentToken()
+                    ? await sendAuthedRequest(method, path, requestOptions)
+                    : await fetch(path.startsWith('http') ? path : `${API_BASE_URL}${path.startsWith('/') ? path : '/' + path}`, requestOptions);
+
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    updateJsonViewer(
+                        {
+                            success: false,
+                            error: 'Réponse non-JSON reçue',
+                            raw_response: text.substring(0, 500),
+                            status: response.status
+                        },
+                        'error',
+                        response.status
+                    );
+                    return;
+                }
+
+                updateJsonViewer(data, response.ok ? 'success' : 'error', response.status);
+            } catch (error) {
+                if (error.message && error.message.includes('Session expirée')) {
+                    // Déjà géré par handleHttpError
+                    return;
+                }
+                showNotification('Erreur: ' + error.message, 'error');
+                updateJsonViewer({ success: false, error: error.message }, 'error', 500);
+            }
+        }
+
+        /**
+         * Met à jour l'affichage JSON
+         * @param {object} data - Données à afficher
+         * @param {string} status - Statut (success, error, pending)
+         * @param {number} statusCode - Code HTTP
+         */
+        function updateJsonViewer(data, status = 'success', statusCode = 200) {
+            const output = document.getElementById('json-output');
+            const badge = document.getElementById('status-badge');
+            
+            badge.innerHTML = '';
+            if (status === 'success') {
+                badge.innerHTML = `<span class="status-badge status-success">✓ ${statusCode} Success</span>`;
+            } else if (status === 'error') {
+                badge.innerHTML = `<span class="status-badge status-error">✗ ${statusCode} Error</span>`;
+            } else {
+                badge.innerHTML = `<span class="status-badge status-pending">⏳ Loading...</span>`;
+            }
+
+            if (data === null) {
+                output.classList.add('empty');
+                output.textContent = 'Chargement...';
+            } else {
+            output.classList.remove('empty');
+            output.textContent = JSON.stringify(data, null, 2);
+        }
+        }
+
+        /**
+         * Exécute directement un endpoint depuis un bouton de feature
+         * @param {object} endpoint - Configuration de l'endpoint
+         */
+        async function executeEndpoint(endpoint) {
+            updateJsonViewer(null, 'pending');
+            
+            try {
+                let requestOptions = {
+                    method: endpoint.method,
+                    headers: {}
+                };
+
+                // Gérer le body pour POST/PUT
+                if ((endpoint.method === 'POST' || endpoint.method === 'PUT') && endpoint.body) {
+                    try {
+                        const bodyObj = JSON.parse(endpoint.body);
+                        requestOptions.body = JSON.stringify(bodyObj);
+                        requestOptions.headers['Content-Type'] = 'application/json';
+                } catch (e) {
+                    updateJsonViewer(
+                            { success: false, error: 'Body JSON invalide: ' + e.message },
+                        'error',
+                            400
+                    );
+                    return;
+                    }
+                }
+
+                // Envoyer la requête (authentifiée ou non)
+                const response = endpoint.requiresAuth && getCurrentToken()
+                    ? await sendAuthedRequest(endpoint.method, endpoint.path, requestOptions)
+                    : await fetch(endpoint.path.startsWith('http') ? endpoint.path : `${API_BASE_URL}${endpoint.path.startsWith('/') ? endpoint.path : '/' + endpoint.path}`, requestOptions);
+
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    updateJsonViewer(
+                        { 
+                            success: false, 
+                            error: 'Réponse non-JSON reçue',
+                            raw_response: text.substring(0, 500),
+                            status: response.status
+                        },
+                        'error',
+                        response.status
+                    );
+                    return;
+                }
+                
+                updateJsonViewer(data, response.ok ? 'success' : 'error', response.status);
+            } catch (error) {
+                if (error.message && error.message.includes('Session expirée')) {
+                    return;
+                }
+                showNotification('Erreur: ' + error.message, 'error');
+                updateJsonViewer({ success: false, error: error.message }, 'error', 500);
+            }
+        }
+
+        /**
+         * Initialise les features et crée les onglets dans la sidebar
+         */
+        function initFeatures() {
+            const navFeaturesList = document.getElementById('nav-features-list');
+            const featureSectionsContainer = document.getElementById('feature-sections-container');
+            
+            navFeaturesList.innerHTML = '';
+            featureSectionsContainer.innerHTML = '';
+            
+            FEATURE_TABS.forEach(feature => {
+                // Créer l'item de navigation dans la sidebar
+                const navItem = document.createElement('div');
+                navItem.className = 'nav-item';
+                navItem.id = `nav-feature-${feature.id}`;
+                navItem.textContent = `${feature.icon} ${feature.label}`;
+                navItem.onclick = () => showSection(feature.id);
+                navFeaturesList.appendChild(navItem);
+                
+                // Créer la section de contenu pour cette feature
+                const featureSection = document.createElement('div');
+                featureSection.className = 'feature-section';
+                featureSection.id = `section-feature-${feature.id}`;
+                featureSection.style.display = 'none';
+                
+                const formSection = document.createElement('div');
+                formSection.className = 'form-section';
+                
+                const titleRow = document.createElement('div');
+                titleRow.style.display = 'flex';
+                titleRow.style.justifyContent = 'space-between';
+                titleRow.style.alignItems = 'center';
+                titleRow.style.marginBottom = '1rem';
+                
+                const title = document.createElement('h3');
+                title.textContent = `${feature.icon} ${feature.label}`;
+                title.style.margin = '0';
+                titleRow.appendChild(title);
+                
+                const playTestBtn = document.createElement('button');
+                playTestBtn.className = 'btn btn-test-play btn-test';
+                playTestBtn.textContent = '▶ Play test';
+                playTestBtn.onclick = () => runAllTestsForFeature(feature.id);
+                titleRow.appendChild(playTestBtn);
+                
+                formSection.appendChild(titleRow);
+                
+                const description = document.createElement('p');
+                description.style.fontSize = '0.875rem';
+                description.style.color = 'var(--text-muted)';
+                description.style.marginBottom = '1rem';
+                description.textContent = `Endpoints disponibles pour la feature ${feature.label}. Cliquez sur un endpoint pour l'exécuter ou utilisez "Remplir la sandbox" pour le modifier avant envoi.`;
+                formSection.appendChild(description);
+                
+                // Conteneur pour les résultats de tests
+                const testResultsContainer = document.createElement('div');
+                testResultsContainer.id = `test-results-${feature.id}`;
+                testResultsContainer.className = 'test-results-container';
+                testResultsContainer.style.display = 'none';
+                formSection.appendChild(testResultsContainer);
+                
+                const endpointsList = document.createElement('div');
+                endpointsList.className = 'preset-list';
+                
+                feature.endpoints.forEach(endpoint => {
+                    const item = document.createElement('div');
+                    item.className = 'preset-item';
+                    
+                    const header = document.createElement('div');
+                    header.style.marginBottom = '0.5rem';
+                    
+                    const methodBadge = document.createElement('span');
+                    methodBadge.className = 'preset-method';
+                    methodBadge.textContent = endpoint.method;
+                    
+                    const path = document.createElement('span');
+                    path.className = 'preset-path';
+                    path.textContent = endpoint.path;
+                    
+                    header.appendChild(methodBadge);
+                    header.appendChild(path);
+                    
+                    const desc = document.createElement('div');
+                    desc.className = 'preset-description';
+                    desc.textContent = endpoint.description;
+                    
+                    const actions = document.createElement('div');
+                    actions.style.marginTop = '0.75rem';
+                    actions.style.display = 'flex';
+                    actions.style.gap = '0.5rem';
+                    
+                    const runTestBtn = document.createElement('button');
+                    runTestBtn.className = 'btn btn-test-run btn-test';
+                    runTestBtn.style.padding = '0.4rem 0.75rem';
+                    runTestBtn.style.fontSize = '0.75rem';
+                    runTestBtn.textContent = '▶ Run test';
+                    runTestBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        await runSingleTest(endpoint, feature.id);
+                    };
+                    
+                    const executeBtn = document.createElement('button');
+                    executeBtn.className = 'btn btn-primary';
+                    executeBtn.style.padding = '0.5rem 1rem';
+                    executeBtn.style.fontSize = '0.8rem';
+                    executeBtn.textContent = 'Exécuter';
+                    executeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        executeEndpoint(endpoint);
+                    };
+                    
+                    const fillBtn = document.createElement('button');
+                    fillBtn.className = 'btn btn-success';
+                    fillBtn.style.padding = '0.5rem 1rem';
+                    fillBtn.style.fontSize = '0.8rem';
+                    fillBtn.textContent = 'Remplir la sandbox';
+                    fillBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        fillSandboxFromPreset({
+                            method: endpoint.method,
+                            path: endpoint.path,
+                            body: endpoint.body ? JSON.parse(endpoint.body) : null,
+                            requiresAuth: endpoint.requiresAuth
+                        });
+                    };
+                    
+                    actions.appendChild(runTestBtn);
+                    actions.appendChild(executeBtn);
+                    actions.appendChild(fillBtn);
+                    
+                    item.appendChild(header);
+                    item.appendChild(desc);
+                    item.appendChild(actions);
+                    
+                    endpointsList.appendChild(item);
+                });
+                
+                formSection.appendChild(endpointsList);
+                featureSection.appendChild(formSection);
+                featureSectionsContainer.appendChild(featureSection);
+            });
+        }
+
+        /**
+         * Teste un seul endpoint
+         * @param {object} endpoint - Configuration de l'endpoint
+         * @param {string} featureId - ID de la feature
+         * @returns {Promise<object>} Résultat du test
+         */
+        async function runSingleTest(endpoint, featureId) {
+            const endpointName = `${endpoint.method} ${endpoint.path}`;
+            console.log(`[Test] Démarrage du test: ${endpointName}`);
+            
+            const result = {
+                endpoint: endpointName,
+                status: 'ERROR',
+                detail: '',
+                statusCode: 0,
+                duration: 0
+            };
+            
+            const startTime = Date.now();
+            
+            try {
+                let requestOptions = {
+                    method: endpoint.method,
+                    headers: {}
+                };
+
+                // Gérer le body pour POST/PUT
+                if ((endpoint.method === 'POST' || endpoint.method === 'PUT') && endpoint.body) {
+                    try {
+                        const bodyObj = JSON.parse(endpoint.body);
+                        requestOptions.body = JSON.stringify(bodyObj);
+                        requestOptions.headers['Content-Type'] = 'application/json';
+                    } catch (e) {
+                        result.status = 'ERROR';
+                        result.detail = `Body JSON invalide: ${e.message}`;
+                        result.duration = Date.now() - startTime;
+                        renderTestResult(result, featureId, [result]);
+                        return result;
+                    }
+                }
+
+                // Envoyer la requête
+                let response;
+                try {
+                    if (endpoint.requiresAuth && getCurrentToken()) {
+                        response = await sendAuthedRequest(endpoint.method, endpoint.path, requestOptions);
+                    } else if (endpoint.requiresAuth && !getCurrentToken()) {
+                        result.status = 'UNAUTHORIZED';
+                        result.detail = 'Token manquant';
+                        result.statusCode = 401;
+                        result.duration = Date.now() - startTime;
+                        renderTestResult(result, featureId, [result]);
+                        return result;
+                    } else {
+                        const url = endpoint.path.startsWith('http') 
+                            ? endpoint.path 
+                            : `${API_BASE_URL}${endpoint.path.startsWith('/') ? endpoint.path : '/' + endpoint.path}`;
+                        response = await fetch(url, requestOptions);
+                    }
+                } catch (networkError) {
+                    // Gérer les erreurs de réseau (timeout, CORS, etc.)
+                    if (networkError.message && networkError.message.includes('Session expirée')) {
+                        result.status = 'UNAUTHORIZED';
+                        result.detail = 'Session expirée';
+                        result.statusCode = 401;
+                    } else {
+                        result.status = 'ERROR';
+                        result.detail = `Erreur réseau: ${networkError.message}`;
+                    }
+                    result.duration = Date.now() - startTime;
+                    renderTestResult(result, featureId, [result]);
+                    return result;
+                }
+
+                result.statusCode = response.status;
+                result.duration = Date.now() - startTime;
+
+                // Déterminer le statut selon le code HTTP
+                if (response.status >= 200 && response.status < 300) {
+                    result.status = 'OK';
+                    try {
+                        const text = await response.text();
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch (e) {
+                            result.detail = `${response.status} + réponse non-JSON`;
+                            renderTestResult(result, featureId, [result]);
+                            return result;
+                        }
+                        
+                        // Générer un détail court
+                        if (data.success && data.data) {
+                            if (Array.isArray(data.data)) {
+                                result.detail = `${response.status} + data.length=${data.data.length}`;
+                            } else if (typeof data.data === 'object') {
+                                const keys = Object.keys(data.data);
+                                result.detail = `${response.status} + data.${keys.slice(0, 2).join(', ')}`;
+                            } else {
+                                result.detail = `${response.status} + data`;
+                            }
+                        } else {
+                            result.detail = `${response.status} + ${JSON.stringify(data).substring(0, 50)}`;
+                        }
+                    } catch (e) {
+                        result.detail = `${response.status} + erreur parsing`;
+                    }
+                } else if (response.status === 401) {
+                    result.status = 'UNAUTHORIZED';
+                    result.detail = `${response.status} - Token invalide ou expiré`;
+                } else if (response.status === 403) {
+                    result.status = 'FORBIDDEN';
+                    result.detail = `${response.status} - Accès refusé (rôle insuffisant)`;
+                } else {
+                    result.status = 'ERROR';
+                    try {
+                        const text = await response.text();
+                        const data = JSON.parse(text);
+                        result.detail = `${response.status} - ${data.error || data.message || 'Erreur inconnue'}`;
+                    } catch (e) {
+                        result.detail = `${response.status} - Erreur HTTP`;
+                    }
+                }
+            } catch (error) {
+                result.status = 'ERROR';
+                result.detail = error.message || 'Erreur inconnue';
+                result.duration = Date.now() - startTime;
+            }
+            
+            renderTestResult(result, featureId, [result]);
+            return result;
+        }
+
+        /**
+         * Teste tous les endpoints d'une feature
+         * @param {string} featureId - ID de la feature
+         * @returns {Promise<Array>} Résultats de tous les tests
+         */
+        async function runAllTestsForFeature(featureId) {
+            console.log(`[Test] Démarrage des tests pour la feature: ${featureId}`);
+            
+            const feature = FEATURE_TABS.find(f => f.id === featureId);
+            if (!feature) {
+                showNotification('Feature introuvable', 'error');
+                return [];
+            }
+            
+            const results = [];
+            const resultsContainer = document.getElementById(`test-results-${featureId}`);
+            if (resultsContainer) {
+                resultsContainer.style.display = 'block';
+                resultsContainer.innerHTML = `
+                    <div class="test-results-header">
+                        <h4>⏳ Tests en cours...</h4>
+                    </div>
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        <div class="test-loading" style="margin: 0 auto 1rem;"></div>
+                        <p>Exécution des tests pour ${feature.label}...</p>
+                    </div>
+                `;
+            }
+            
+            // Test 0 - Vérification de l'API / santé générale
+            try {
+                const healthResult = {
+                    endpoint: 'GET /api (Health Check)',
+                    status: 'ERROR',
+                    detail: '',
+                    statusCode: 0,
+                    duration: 0
+                };
+                const healthStart = Date.now();
+                try {
+                    const response = await fetch(`${API_BASE_URL.replace('/api', '')}/check.php`);
+                    healthResult.statusCode = response.status;
+                    healthResult.duration = Date.now() - healthStart;
+                    if (response.ok) {
+                        healthResult.status = 'OK';
+                        healthResult.detail = `${response.status} - API accessible`;
+                    } else {
+                        healthResult.status = 'ERROR';
+                        healthResult.detail = `${response.status} - API non accessible`;
+                    }
+                } catch (e) {
+                    healthResult.status = 'ERROR';
+                    healthResult.detail = `Erreur réseau: ${e.message}`;
+                    healthResult.duration = Date.now() - healthStart;
+                }
+                results.push(healthResult);
+            } catch (e) {
+                results.push({
+                    endpoint: 'GET /api (Health Check)',
+                    status: 'ERROR',
+                    detail: `Erreur: ${e.message}`,
+                    statusCode: 0,
+                    duration: 0
+                });
+            }
+            
+            // Test 1 - Authentification (si nécessaire)
+            const needsAuth = feature.endpoints.some(e => e.requiresAuth);
+            if (needsAuth) {
+                const token = getCurrentToken();
+                if (!token) {
+                    // Essayer de se connecter avec des credentials par défaut
+                    const authResult = {
+                        endpoint: 'POST /auth/login',
+                        status: 'ERROR',
+                        detail: '',
+                        statusCode: 0,
+                        duration: 0
+                    };
+                    const authStart = Date.now();
+                    try {
+                        const email = document.getElementById('auth-email')?.value || 'directeur@ecole.fr';
+                        const password = document.getElementById('auth-password')?.value || 'directeur123';
+                        
+                        if (!email || !password) {
+                            authResult.status = 'UNAUTHORIZED';
+                            authResult.detail = 'Credentials manquants';
+                        } else {
+                            const body = new URLSearchParams({ email, password });
+                            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: body.toString()
+                            });
+                            
+                            authResult.statusCode = response.status;
+                            authResult.duration = Date.now() - authStart;
+                            
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data.success && data.data && data.data.token) {
+                                    saveAuthSession({
+                                        token: data.data.token,
+                                        user: data.data.user,
+                                        expires_in: data.data.expires_in
+                                    });
+                                    authResult.status = 'OK';
+                                    authResult.detail = `${response.status} - Connexion réussie`;
+                                } else {
+                                    authResult.status = 'UNAUTHORIZED';
+                                    authResult.detail = `${response.status} - Token non reçu`;
+                                }
+                            } else {
+                                authResult.status = 'UNAUTHORIZED';
+                                authResult.detail = `${response.status} - Échec de connexion`;
+                            }
+                        }
+                    } catch (e) {
+                        authResult.status = 'ERROR';
+                        authResult.detail = `Erreur: ${e.message}`;
+                        authResult.duration = Date.now() - authStart;
+                    }
+                    results.push(authResult);
+                    
+                    // Si l'auth échoue, arrêter les tests
+                    if (authResult.status !== 'OK') {
+                        renderTestResults(results, featureId);
+                        showNotification('Tests arrêtés: authentification échouée', 'error');
+                        return results;
+                    }
+                } else {
+                    results.push({
+                        endpoint: 'POST /auth/login',
+                        status: 'OK',
+                        detail: 'Token déjà présent',
+                        statusCode: 200,
+                        duration: 0
+                    });
+                }
+            }
+            
+            // Test 2 - Tous les endpoints de la feature
+            for (const endpoint of feature.endpoints) {
+                const testResult = await runSingleTest(endpoint, featureId);
+                results.push(testResult);
+                
+                // Petit délai entre les tests pour éviter la surcharge
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            renderTestResults(results, featureId);
+            showNotification(`Tests terminés: ${results.filter(r => r.status === 'OK').length}/${results.length} réussis`, 'success');
+            return results;
+        }
+
+        /**
+         * Affiche le résultat d'un test unitaire
+         * @param {object} result - Résultat du test
+         * @param {string} featureId - ID de la feature
+         * @param {Array} allResults - Tous les résultats (pour le tableau)
+         */
+        function renderTestResult(result, featureId, allResults = []) {
+            const resultsContainer = document.getElementById(`test-results-${featureId}`);
+            if (!resultsContainer) return;
+            
+            resultsContainer.style.display = 'block';
+            renderTestResults(allResults, featureId);
+        }
+
+        /**
+         * Affiche les résultats de tests dans un tableau
+         * @param {Array} results - Résultats des tests
+         * @param {string} featureId - ID de la feature
+         */
+        function renderTestResults(results, featureId) {
+            const resultsContainer = document.getElementById(`test-results-${featureId}`);
+            if (!resultsContainer) return;
+            
+            const okCount = results.filter(r => r.status === 'OK').length;
+            const totalCount = results.length;
+            
+            let html = `
+                <div class="test-results-header">
+                    <h4>📊 Résultats des tests (${okCount}/${totalCount} OK)</h4>
+                </div>
+                <table class="test-results-table">
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Résultat</th>
+                            <th>Détail</th>
+                            <th>Temps</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            results.forEach(result => {
+                const statusClass = `test-status-${result.status.toLowerCase()}`;
+                const duration = result.duration ? `${result.duration}ms` : '—';
+                
+                html += `
+                    <tr>
+                        <td><code style="font-size: 0.8rem;">${escapeHtml(result.endpoint)}</code></td>
+                        <td><span class="${statusClass}">${result.status}</span></td>
+                        <td><span class="test-detail">${escapeHtml(result.detail)}</span></td>
+                        <td>${duration}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            resultsContainer.innerHTML = html;
+        }
+
+        /**
+         * Échappe le HTML pour éviter les injections
+         * @param {string} text - Texte à échapper
+         * @returns {string}
+         */
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /**
+         * Initialise l'application au chargement
+         */
+        function init() {
+            // Charger le token depuis localStorage
+            const session = getAuthSession();
+            if (session && session.token) {
+                document.getElementById('token-info-section').style.display = 'block';
+                document.getElementById('token-display').value = session.token.substring(0, 50) + '...';
+                document.getElementById('user-display').value = session.user?.email || session.user?.full_name || 'Utilisateur';
+            }
+
+            // Initialiser les features
+            initFeatures();
+        }
+
+        // Exposer les fonctions globalement pour les onclick
+        window.showSection = showSection;
+        window.performLogin = performLogin;
+        window.clearToken = clearToken;
+        window.fillSandboxFromPreset = fillSandboxFromPreset;
+        window.sendSandboxRequest = sendSandboxRequest;
+        window.executeEndpoint = executeEndpoint;
+        window.runSingleTest = runSingleTest;
+        window.runAllTestsForFeature = runAllTestsForFeature;
+
+        // Initialiser au chargement
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMSO Tester - Backend vs FakeRouter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0E1A2B;
+            --bg-darker: #0A1320;
+            --bg-sidebar: #1A2332;
+            --primary-blue: #31A8FF;
+            --primary-orange: #FFB74D;
+            --text-light: #E0E6ED;
+            --text-muted: #8B9DB0;
+            --border-color: #2A3441;
+            --success: #4CAF50;
+            --error: #F44336;
+            --warning: #FF9800;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 1.5rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar .subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section h2 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-darker);
+            color: var(--primary-blue);
+        }
+
+        .nav-item.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+        }
+
+        .header h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            gap: 2rem;
+            overflow-y: auto;
+        }
+
+        /* Left Column - Forms */
+        .left-column {
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .form-section {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary-blue);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .radio-group input[type="radio"] {
+            width: auto;
+            margin-right: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2598E6;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #388E3C;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #E68900;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Mode Selector */
+        .mode-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-darker);
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+        }
+
+        .mode-option {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .mode-option:hover {
+            border-color: var(--primary-blue);
+            background: rgba(49, 168, 255, 0.1);
+        }
+
+        .mode-option.active {
+            border-color: var(--primary-blue);
+            background: rgba(49, 168, 255, 0.2);
+        }
+
+        .mode-option input[type="radio"] {
+            margin-right: 0.5rem;
+        }
+
+        .mode-option.backend {
+            border-color: var(--primary-blue);
+        }
+
+        .mode-option.backend.active {
+            background: rgba(49, 168, 255, 0.2);
+        }
+
+        .mode-option.fakerouter {
+            border-color: var(--primary-orange);
+        }
+
+        .mode-option.fakerouter.active {
+            background: rgba(255, 183, 77, 0.2);
+        }
+
+        .mode-option.compare {
+            border-color: var(--success);
+        }
+
+        .mode-option.compare.active {
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        /* Preset List */
+        .preset-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .preset-item {
+            padding: 1rem;
+            background: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-item:hover {
+            border-color: var(--primary-blue);
+            background: rgba(49, 168, 255, 0.1);
+        }
+
+        .preset-item .preset-method {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .preset-item .preset-path {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .preset-item .preset-description {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .btn-test {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        .btn-test-run {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-test-run:hover {
+            background: #388E3C;
+        }
+
+        .btn-test-play {
+            background: var(--primary-orange);
+            color: white;
+        }
+
+        .btn-test-play:hover {
+            background: #E68900;
+        }
+
+        .btn-test-compare {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-test-compare:hover {
+            background: #388E3C;
+        }
+
+        /* Test Results */
+        .test-results-container {
+            margin-top: 1.5rem;
+            background: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .test-results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .test-results-header h4 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-orange);
+            margin: 0;
+        }
+
+        .test-results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .test-results-table th,
+        .test-results-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .test-results-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-sidebar);
+        }
+
+        .test-results-table td {
+            color: var(--text-light);
+        }
+
+        .test-status-ok {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .test-status-forbidden {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .test-status-unauthorized {
+            color: var(--error);
+            font-weight: 600;
+        }
+
+        .test-status-error {
+            color: var(--error);
+            font-weight: 600;
+        }
+
+        .test-detail {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comparison-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-sidebar);
+        }
+
+        .alignment-ok {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .alignment-warning {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .alignment-error {
+            color: var(--error);
+            font-weight: 600;
+        }
+
+        .test-loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--text-muted);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            max-width: 400px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--error);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h1>SMSO Tester</h1>
+        <p class="subtitle">Backend vs FakeRouter</p>
+        
+        <div class="nav-section">
+            <h2>Navigation</h2>
+            <div class="nav-item active" onclick="showSection('config')" id="nav-config">
+                ⚙️ Configuration
+            </div>
+            <div class="nav-item" onclick="showSection('compare')" id="nav-compare">
+                🔄 Comparaison
+            </div>
+        </div>
+        <div class="nav-section" id="nav-features-section">
+            <h2>Features</h2>
+            <div id="nav-features-list"></div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div style="background: var(--warning); color: white; padding: 1rem 2rem; border-bottom: 1px solid var(--border-color);">
+            <strong>⚠️ Cette page est obsolète</strong> - Utiliser plutôt <a href="test/index.html" style="color: white; text-decoration: underline;">/backend/ui/test/index.html</a> (nouvelle interface unifiée)
+        </div>
+        <header class="header">
+            <h2>SMSO Tester - Outil de tests avancés</h2>
+        </header>
+
+        <div class="content-area">
+            <!-- Left Column -->
+            <div class="left-column" id="content-left">
+                <!-- Section Configuration -->
+                <div id="section-config">
+                    <div class="form-section">
+                        <h3>⚙️ Configuration</h3>
+                        
+                        <div class="form-group">
+                            <label>Mode de test *</label>
+                            <div class="mode-selector">
+                                <label class="mode-option backend" onclick="selectMode('backend')">
+                                    <input type="radio" name="test-mode" value="backend" checked>
+                                    <div>
+                                        <strong>🔵 Backend réel</strong><br>
+                                        <small>API PHP</small>
+                                    </div>
+                                </label>
+                                <label class="mode-option fakerouter" onclick="selectMode('fakerouter')">
+                                    <input type="radio" name="test-mode" value="fakerouter">
+                                    <div>
+                                        <strong>🟠 FakeRouter</strong><br>
+                                        <small>JS Demo</small>
+                                    </div>
+                                </label>
+                                <label class="mode-option compare" onclick="selectMode('compare')">
+                                    <input type="radio" name="test-mode" value="compare">
+                                    <div>
+                                        <strong>🔄 Comparaison</strong><br>
+                                        <small>Backend vs FakeRouter</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Base URL de l'API</label>
+                            <input type="text" id="api-base-url" value="/SMSO/backend/public/api" placeholder="/SMSO/backend/public/api">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Email de test</label>
+                            <input type="email" id="test-email" placeholder="directeur@ecole.fr" value="directeur@ecole.fr">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mot de passe de test</label>
+                            <input type="password" id="test-password" placeholder="••••••••" value="directeur123">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mode d'envoi du token</label>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="token-mode" value="query" checked>
+                                    Query ?token= (recommandé)
+                                </label>
+                                <label>
+                                    <input type="radio" name="token-mode" value="header">
+                                    Header Authorization Bearer
+                                </label>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="performLogin()">
+                            Se connecter
+                        </button>
+                    </div>
+
+                    <div class="form-section" id="token-info-section" style="display: none;">
+                        <h3>✅ Token actif</h3>
+                        <div class="form-group">
+                            <label>Token (masqué)</label>
+                            <input type="text" id="token-display" readonly style="font-family: monospace; font-size: 0.8rem;">
+                        </div>
+                        <div class="form-group">
+                            <label>Utilisateur</label>
+                            <input type="text" id="user-display" readonly>
+                        </div>
+                        <button class="btn btn-warning" onclick="clearToken()">
+                            Déconnexion
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section Comparaison -->
+                <div id="section-compare" style="display: none;">
+                    <div class="form-section">
+                        <h3>🔄 Comparaison Backend vs FakeRouter</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                            Compare les réponses du backend réel avec celles du FakeRouter pour vérifier l'alignement.
+                        </p>
+                        <button class="btn btn-test-compare" onclick="runComparison()">
+                            ▶ Lancer la comparaison complète
+                        </button>
+                    </div>
+                    <div id="comparison-results-container" class="test-results-container" style="display: none;"></div>
+                </div>
+
+                <!-- Sections de features (générées dynamiquement) -->
+                <div id="feature-sections-container"></div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        // Configuration
+        const API_BASE_URL_DEFAULT = '/SMSO/backend/public/api';
+        const AUTH_SESSION_KEY = 'smso_auth_session';
+        const TOKEN_TRANSPORT_DEFAULT = 'query';
+
+        // État global
+        let currentMode = 'backend'; // 'backend', 'fakerouter', 'compare'
+        let currentToken = null;
+        let fakeRouterModule = null;
+
+        // Configuration des features (copiée depuis testendpoint.html)
+        const FEATURE_TABS = [
+            {
+                id: 'stats',
+                label: 'Stats',
+                icon: '📊',
+                endpoints: [
+                    {
+                        id: 'stats-overview',
+                        label: 'Dashboard global',
+                        method: 'GET',
+                        path: '/stats/overview',
+                        body: '',
+                        description: 'Vue exécutive des indicateurs pour un établissement.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'stats-schools',
+                        label: 'Analytics multi-écoles',
+                        method: 'GET',
+                        path: '/stats/schools',
+                        body: '',
+                        description: 'Retourne les indicateurs clés agrégés par établissement pour les dashboards direction. Rôles: director, pedago uniquement.',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'assignments',
+                label: 'Assignments',
+                icon: '📋',
+                endpoints: [
+                    {
+                        id: 'assignments-list',
+                        label: 'Liste des assignments (Admin)',
+                        method: 'GET',
+                        path: '/assignments',
+                        body: '',
+                        description: 'Liste tous les assignments visibles pour l\'utilisateur courant (filtrage par rôle).',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'assignments-sync',
+                        label: '🚨 Simuler ErgoMate Sync',
+                        method: 'GET',
+                        path: '/assignments/sync',
+                        body: '',
+                        description: 'Simule la synchronisation pour l\'app ErgoMate. Retourne uniquement les assignments publiés (status="published") pour les classes de l\'étudiant.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'assignments-get',
+                        label: 'Récupérer un assignment',
+                        method: 'GET',
+                        path: '/assignments/1',
+                        body: '',
+                        description: 'Récupère un assignment par ID.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'assignments-create',
+                        label: 'Créer un assignment',
+                        method: 'POST',
+                        path: '/assignments',
+                        body: JSON.stringify({
+                            class_id: 1,
+                            title: 'Math Homework 1',
+                            description: 'Exercises 1 to 10 from chapter 3.',
+                            subject: 'Mathematics',
+                            due_date: '2025-11-25T23:59:59Z',
+                            available_at: '2025-11-20T08:00:00Z',
+                            status: 'draft'
+                        }, null, 2),
+                        description: 'Création d\'un nouvel assignment.',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'curriculum',
+                label: 'Curriculum',
+                icon: '📚',
+                endpoints: [
+                    {
+                        id: 'curriculum-overview',
+                        label: 'Vue globale du curriculum',
+                        method: 'GET',
+                        path: '/curriculum',
+                        body: '',
+                        description: 'Récupère le curriculum complet avec toutes les matières et leurs chapitres.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'curriculum-subjects',
+                        label: 'Liste des matières',
+                        method: 'GET',
+                        path: '/curriculum/subjects',
+                        body: '',
+                        description: 'Liste toutes les matières du curriculum.',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'themes',
+                label: 'Themes',
+                icon: '📚',
+                endpoints: [
+                    {
+                        id: 'themes-list',
+                        label: 'Liste des thèmes',
+                        method: 'GET',
+                        path: '/themes',
+                        body: '',
+                        description: 'Liste tous les thèmes selon le rôle de l\'utilisateur.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'themes-get',
+                        label: 'Récupérer un thème',
+                        method: 'GET',
+                        path: '/themes/1',
+                        body: '',
+                        description: 'Récupère un thème par ID avec ses questions et révision.',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'classes',
+                label: 'Classes',
+                icon: '🏫',
+                endpoints: [
+                    {
+                        id: 'classes-list',
+                        label: 'Liste des classes',
+                        method: 'GET',
+                        path: '/classes',
+                        body: '',
+                        description: 'Liste toutes les classes de l\'établissement de l\'utilisateur.',
+                        requiresAuth: true
+                    },
+                    {
+                        id: 'classes-get',
+                        label: 'Récupérer une classe',
+                        method: 'GET',
+                        path: '/classes/1',
+                        body: '',
+                        description: 'Récupère les informations d\'une classe par ID.',
+                        requiresAuth: true
+                    }
+                ]
+            },
+            {
+                id: 'submissions',
+                label: 'Submissions',
+                icon: '📝',
+                endpoints: [
+                    {
+                        id: 'submissions-create',
+                        label: 'Envoyer une soumission (ErgoMate)',
+                        method: 'POST',
+                        path: '/submissions',
+                        body: JSON.stringify({
+                            assignment_id: 1,
+                            student_id: 10,
+                            score: 85.5,
+                            duration: 300,
+                            responses: {
+                                question_1: { answer: 'a', time_spent: 30 },
+                                question_2: { answer: true, time_spent: 20 }
+                            }
+                        }, null, 2),
+                        description: 'Crée ou met à jour une soumission d\'un étudiant pour un assignment.',
+                        requiresAuth: true
+                    }
+                ]
+            }
+        ];
+
+        // ============================================
+        // FONCTIONS D'AUTHENTIFICATION
+        // ============================================
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch (error) {
+                console.error('[SMSOTester] Erreur lors de la lecture de la session:', error);
+                return null;
+            }
+        }
+
+        function getCurrentToken() {
+            const session = getAuthSession();
+            return session?.token || null;
+        }
+
+        function saveAuthSession(session) {
+            try {
+                localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+                console.log('[SMSOTester] Session sauvegardée');
+            } catch (error) {
+                console.error('[SMSOTester] Erreur lors de la sauvegarde de la session:', error);
+            }
+        }
+
+        function clearAuthSession() {
+            try {
+                localStorage.removeItem(AUTH_SESSION_KEY);
+                console.log('[SMSOTester] Session effacée');
+            } catch (error) {
+                console.error('[SMSOTester] Erreur lors de l\'effacement de la session:', error);
+            }
+        }
+
+        async function performLogin() {
+            const email = document.getElementById('test-email').value.trim();
+            const password = document.getElementById('test-password').value;
+            const apiBaseUrl = document.getElementById('api-base-url').value.trim() || API_BASE_URL_DEFAULT;
+
+            if (!email || !password) {
+                showNotification('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+
+            try {
+                const body = new URLSearchParams({ email, password });
+                const response = await fetch(`${apiBaseUrl}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: body.toString()
+                });
+
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    showNotification('Réponse non-JSON reçue', 'error');
+                    return;
+                }
+
+                if (response.ok && data.success && data.data && data.data.token) {
+                    const { token, user, expires_in } = data.data;
+                    
+                    saveAuthSession({
+                        token,
+                        user,
+                        expires_in,
+                        expires_at: expires_in ? Date.now() + (expires_in * 1000) : null
+                    });
+                    
+                    currentToken = token;
+                    
+                    document.getElementById('token-info-section').style.display = 'block';
+                    document.getElementById('token-display').value = token.substring(0, 50) + '...';
+                    document.getElementById('user-display').value = user.email || user.full_name || 'Utilisateur';
+                    
+                    showNotification('Connexion réussie', 'success');
+                } else {
+                    showNotification(data.error || 'Erreur de connexion', 'error');
+                }
+            } catch (error) {
+                showNotification('Erreur réseau: ' + error.message, 'error');
+            }
+        }
+
+        function clearToken() {
+            clearAuthSession();
+            currentToken = null;
+            document.getElementById('token-info-section').style.display = 'none';
+            showNotification('Déconnexion réussie', 'success');
+        }
+
+        // ============================================
+        // FONCTIONS DE MODE
+        // ============================================
+
+        function selectMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-option').forEach(opt => opt.classList.remove('active'));
+            document.querySelector(`.mode-option.${mode === 'backend' ? 'backend' : mode === 'fakerouter' ? 'fakerouter' : 'compare'}`).classList.add('active');
+            document.querySelector(`input[value="${mode}"]`).checked = true;
+            
+            // Charger le FakeRouter si nécessaire
+            if (mode === 'fakerouter' || mode === 'compare') {
+                loadFakeRouter();
+            }
+        }
+
+        async function loadFakeRouter() {
+            if (fakeRouterModule) return fakeRouterModule;
+            
+            try {
+                // Créer un wrapper simplifié du FakeRouter
+                // Pour éviter les dépendances, on va créer une version standalone
+                fakeRouterModule = await createFakeRouterWrapper();
+                console.log('[SMSOTester] FakeRouter chargé');
+                return fakeRouterModule;
+            } catch (error) {
+                console.error('[SMSOTester] Erreur lors du chargement du FakeRouter:', error);
+                showNotification('Erreur lors du chargement du FakeRouter', 'error');
+                return null;
+            }
+        }
+
+        // ============================================
+        // WRAPPER FAKEROUTER (version simplifiée)
+        // ============================================
+
+        async function createFakeRouterWrapper() {
+            // Simuler getActiveSchoolId
+            function getActiveSchoolId() {
+                return '1'; // Par défaut, établissement 1
+            }
+
+            // Données mockées simplifiées (extrait du FakeRouter.js)
+            const MOCK_STATS_OVERVIEW = {
+                kpis: {
+                    totalStudents: 245,
+                    totalClasses: 8,
+                    activeAssignments: 23,
+                    completionRate: 78.5,
+                    averageGrade: 13.2
+                }
+            };
+
+            const MOCK_ASSIGNMENTS = [
+                {
+                    id: 1,
+                    class_id: 1,
+                    title: 'DM - Suites numériques',
+                    description: 'Exercices sur les suites arithmétiques et géométriques.',
+                    subject: 'Mathématiques',
+                    due_date: '2024-11-25T23:59:59Z',
+                    available_at: '2024-11-20T08:00:00Z',
+                    status: 'published',
+                    created_at: '2024-11-10T09:00:00Z',
+                    updated_at: '2024-11-10T09:00:00Z'
+                }
+            ];
+
+            const MOCK_CURRICULUM = {
+                subjects: [
+                    {
+                        id: 'math-term',
+                        name: 'Mathématiques Terminale',
+                        level: 'Terminale',
+                        chapters: [
+                            { id: 'ch1', title: 'Suites numériques', progress: 85 }
+                        ]
+                    }
+                ]
+            };
+
+            const MOCK_THEMES = [
+                {
+                    id: 1,
+                    title: 'Suites numériques',
+                    description: 'Introduction aux suites arithmétiques et géométriques.',
+                    tags: ['maths', 'suites', 'terminale'],
+                    subject: 'Maths',
+                    type: 'quiz',
+                    status: 'published'
+                }
+            ];
+
+            const MOCK_CLASSES = [
+                {
+                    id: 1,
+                    name: 'Terminale 2 – Spé Maths',
+                    short_name: 'Tle2',
+                    level: 'Terminale',
+                    academic_year: '2024-2025',
+                    school_id: 1
+                }
+            ];
+
+            // Fonction de routage simplifiée
+            function routeRequest(method, path, body) {
+                const normalizedPath = path.replace(/^\/api/, '');
+                const activeSchoolId = getActiveSchoolId();
+
+                // GET /stats/overview
+                if (method === 'GET' && normalizedPath === '/stats/overview') {
+                    return { success: true, data: MOCK_STATS_OVERVIEW };
+                }
+
+                // GET /stats/schools
+                if (method === 'GET' && normalizedPath === '/stats/schools') {
+                    return {
+                        success: true,
+                        data: [{
+                            school_id: 1,
+                            school_name: 'Demo School A',
+                            avg_score: 14.5,
+                            completion_rate: 0.8,
+                            active_students: 100,
+                            classes_count: 5
+                        }]
+                    };
+                }
+
+                // GET /assignments/sync
+                if (method === 'GET' && normalizedPath === '/assignments/sync') {
+                    const syncedAssignments = MOCK_ASSIGNMENTS
+                        .filter(a => a.class_id === 1 && a.status === 'published')
+                        .map(a => ({
+                            title: a.title,
+                            date: a.due_date,
+                            matiere: a.subject,
+                            description: a.description,
+                            available_at: a.available_at
+                        }));
+                    return { success: true, data: syncedAssignments };
+                }
+
+                // GET /assignments
+                if (method === 'GET' && normalizedPath === '/assignments') {
+                    return { success: true, data: MOCK_ASSIGNMENTS };
+                }
+
+                // GET /assignments/:id
+                if (method === 'GET' && normalizedPath.match(/^\/assignments\/[^/]+$/)) {
+                    const id = parseInt(normalizedPath.split('/')[2]);
+                    const assignment = MOCK_ASSIGNMENTS.find(a => a.id === id);
+                    if (assignment) {
+                        return { success: true, data: assignment };
+                    }
+                    throw new Error(`Assignment ${id} introuvable`);
+                }
+
+                // POST /assignments
+                if (method === 'POST' && normalizedPath === '/assignments') {
+                    const newAssignment = {
+                        id: MOCK_ASSIGNMENTS.length + 1,
+                        ...body,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
+                    MOCK_ASSIGNMENTS.push(newAssignment);
+                    return { success: true, data: newAssignment, message: 'Devoir créé avec succès' };
+                }
+
+                // GET /curriculum
+                if (method === 'GET' && normalizedPath === '/curriculum') {
+                    return { success: true, data: MOCK_CURRICULUM };
+                }
+
+                // GET /curriculum/subjects
+                if (method === 'GET' && normalizedPath === '/curriculum/subjects') {
+                    const subjects = MOCK_CURRICULUM.subjects.map(subject => ({
+                        id: subject.id,
+                        name: subject.name,
+                        level: subject.level,
+                        chapters_count: subject.chapters.length,
+                        average_progress: subject.chapters.reduce((sum, ch) => sum + ch.progress, 0) / subject.chapters.length
+                    }));
+                    return { success: true, data: { subjects } };
+                }
+
+                // GET /themes
+                if (method === 'GET' && normalizedPath === '/themes') {
+                    return { success: true, data: MOCK_THEMES };
+                }
+
+                // GET /themes/:id
+                if (method === 'GET' && normalizedPath.match(/^\/themes\/[^/]+$/)) {
+                    const id = parseInt(normalizedPath.split('/')[2]);
+                    const theme = MOCK_THEMES.find(t => t.id === id);
+                    if (theme) {
+                        return { success: true, data: theme };
+                    }
+                    throw new Error(`Theme ${id} introuvable`);
+                }
+
+                // GET /classes
+                if (method === 'GET' && normalizedPath === '/classes') {
+                    return { success: true, data: MOCK_CLASSES };
+                }
+
+                // GET /classes/:id
+                if (method === 'GET' && normalizedPath.match(/^\/classes\/[^/]+$/)) {
+                    const id = parseInt(normalizedPath.split('/')[2]);
+                    const classItem = MOCK_CLASSES.find(c => c.id === id);
+                    if (classItem) {
+                        return { success: true, data: classItem };
+                    }
+                    throw new Error(`Classe ${id} introuvable`);
+                }
+
+                // POST /submissions
+                if (method === 'POST' && normalizedPath === '/submissions') {
+                    return {
+                        success: true,
+                        data: {
+                            assignment_id: body.assignment_id,
+                            student_id: body.student_id,
+                            score: body.score,
+                            duration_seconds: body.duration,
+                            raw_response: body.responses,
+                            completed_at: new Date().toISOString()
+                        },
+                        message: 'Soumission enregistrée avec succès'
+                    };
+                }
+
+                // Route non trouvée
+                throw new Error(`Route non implémentée: ${method} ${normalizedPath}`);
+            }
+
+            // Fonction fakeRequest qui simule une réponse fetch
+            async function fakeRequest(method, path, body = null) {
+                console.log(`[FakeRouter] ${method} ${path}`, body || '');
+                
+                // Simuler un délai réseau
+                const delay = 150 + Math.random() * 150;
+                await new Promise(resolve => setTimeout(resolve, delay));
+                
+                try {
+                    const result = routeRequest(method, path, body);
+                    console.log(`[FakeRouter] ✅ Réponse:`, result);
+                    
+                    // Retourner un objet qui ressemble à une Response fetch
+                    return {
+                        ok: true,
+                        status: 200,
+                        statusText: 'OK',
+                        json: async () => result,
+                        text: async () => JSON.stringify(result)
+                    };
+                } catch (error) {
+                    console.error(`[FakeRouter] ❌ Erreur:`, error);
+                    
+                    // Retourner une erreur HTTP
+                    const errorResponse = {
+                        success: false,
+                        error: error.message
+                    };
+                    
+                    return {
+                        ok: false,
+                        status: 404,
+                        statusText: 'Not Found',
+                        json: async () => errorResponse,
+                        text: async () => JSON.stringify(errorResponse)
+                    };
+                }
+            }
+
+            return { fakeRequest };
+        }
+
+        // ============================================
+        // FONCTIONS D'APPEL API
+        // ============================================
+
+        async function callAPI(method, path, options = {}) {
+            const apiBaseUrl = document.getElementById('api-base-url').value.trim() || API_BASE_URL_DEFAULT;
+            
+            if (currentMode === 'fakerouter' || currentMode === 'compare') {
+                return await callFakeRouter(method, path, options.body);
+            } else {
+                return await callBackend(method, path, options);
+            }
+        }
+
+        async function callBackend(method, path, options = {}) {
+            const apiBaseUrl = document.getElementById('api-base-url').value.trim() || API_BASE_URL_DEFAULT;
+            const token = getCurrentToken();
+            const tokenMode = document.querySelector('input[name="token-mode"]:checked')?.value || TOKEN_TRANSPORT_DEFAULT;
+            
+            let url = path.startsWith('http') ? path : `${apiBaseUrl}${path.startsWith('/') ? path : '/' + path}`;
+            const headers = { ...options.headers };
+
+            if (token && options.requiresAuth !== false) {
+                if (tokenMode === 'header') {
+                    headers['Authorization'] = `Bearer ${token}`;
+                } else {
+                    const separator = url.includes('?') ? '&' : '?';
+                    url = `${url}${separator}token=${encodeURIComponent(token)}`;
+                }
+            }
+
+            if (options.body && (method === 'POST' || method === 'PUT')) {
+                headers['Content-Type'] = 'application/json';
+            }
+
+            const response = await fetch(url, {
+                method,
+                headers,
+                body: options.body ? JSON.stringify(options.body) : undefined
+            });
+
+            return response;
+        }
+
+        async function callFakeRouter(method, path, body = null) {
+            if (!fakeRouterModule) {
+                await loadFakeRouter();
+            }
+            
+            if (!fakeRouterModule) {
+                throw new Error('FakeRouter non disponible');
+            }
+
+            // Normaliser le path (enlever /api si présent)
+            const normalizedPath = path.replace(/^\/api/, '');
+            
+            // Parser le body si c'est une string
+            let parsedBody = body;
+            if (typeof body === 'string') {
+                try {
+                    parsedBody = JSON.parse(body);
+                } catch (e) {
+                    parsedBody = body;
+                }
+            }
+
+            return await fakeRouterModule.fakeRequest(method, normalizedPath, parsedBody);
+        }
+
+        // ============================================
+        // FONCTIONS DE TEST
+        // ============================================
+
+        async function runSingleTest(endpointConfig, mode = null) {
+            const testMode = mode || currentMode;
+            const endpointName = `${endpointConfig.method} ${endpointConfig.path}`;
+            console.log(`[Test] Démarrage du test: ${endpointName} (mode: ${testMode})`);
+            
+            const result = {
+                endpoint: endpointName,
+                status: 'ERROR',
+                detail: '',
+                statusCode: 0,
+                duration: 0,
+                mode: testMode
+            };
+            
+            const startTime = Date.now();
+            
+            try {
+                let requestOptions = {
+                    method: endpointConfig.method,
+                    headers: {},
+                    requiresAuth: endpointConfig.requiresAuth !== false
+                };
+
+                // Gérer le body pour POST/PUT
+                if ((endpointConfig.method === 'POST' || endpointConfig.method === 'PUT') && endpointConfig.body) {
+                    try {
+                        requestOptions.body = typeof endpointConfig.body === 'string' 
+                            ? JSON.parse(endpointConfig.body) 
+                            : endpointConfig.body;
+                    } catch (e) {
+                        result.status = 'ERROR';
+                        result.detail = `Body JSON invalide: ${e.message}`;
+                        result.duration = Date.now() - startTime;
+                        return result;
+                    }
+                }
+
+                // Vérifier l'auth si nécessaire
+                if (endpointConfig.requiresAuth && testMode === 'backend' && !getCurrentToken()) {
+                    result.status = 'UNAUTHORIZED';
+                    result.detail = 'Token manquant';
+                    result.statusCode = 401;
+                    result.duration = Date.now() - startTime;
+                    return result;
+                }
+
+                // Appel API selon le mode
+                let response;
+                if (testMode === 'fakerouter') {
+                    response = await callFakeRouter(endpointConfig.method, endpointConfig.path, requestOptions.body);
+                } else {
+                    response = await callBackend(endpointConfig.method, endpointConfig.path, requestOptions);
+                }
+
+                result.statusCode = response.status;
+                result.duration = Date.now() - startTime;
+
+                // Déterminer le statut selon le code HTTP
+                if (response.status >= 200 && response.status < 300) {
+                    result.status = 'OK';
+                    try {
+                        const text = await response.text();
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch (e) {
+                            result.detail = `${response.status} + réponse non-JSON`;
+                            return result;
+                        }
+                        
+                        // Générer un détail court
+                        if (data.success && data.data) {
+                            if (Array.isArray(data.data)) {
+                                result.detail = `${response.status} + data.length=${data.data.length}`;
+                            } else if (typeof data.data === 'object') {
+                                const keys = Object.keys(data.data);
+                                result.detail = `${response.status} + data.${keys.slice(0, 2).join(', ')}`;
+                            } else {
+                                result.detail = `${response.status} + data`;
+                            }
+                        } else {
+                            result.detail = `${response.status} + ${JSON.stringify(data).substring(0, 50)}`;
+                        }
+                    } catch (e) {
+                        result.detail = `${response.status} + erreur parsing`;
+                    }
+                } else if (response.status === 401) {
+                    result.status = 'UNAUTHORIZED';
+                    result.detail = `${response.status} - Token invalide ou expiré`;
+                } else if (response.status === 403) {
+                    result.status = 'FORBIDDEN';
+                    result.detail = `${response.status} - Accès refusé (rôle insuffisant)`;
+                } else {
+                    result.status = 'ERROR';
+                    try {
+                        const text = await response.text();
+                        const data = JSON.parse(text);
+                        result.detail = `${response.status} - ${data.error || data.message || 'Erreur inconnue'}`;
+                    } catch (e) {
+                        result.detail = `${response.status} - Erreur HTTP`;
+                    }
+                }
+            } catch (error) {
+                result.status = 'ERROR';
+                result.detail = error.message || 'Erreur inconnue';
+                result.duration = Date.now() - startTime;
+            }
+            
+            return result;
+        }
+
+        async function runAllTestsForFeature(featureId) {
+            console.log(`[Test] Démarrage des tests pour la feature: ${featureId}`);
+            
+            const feature = FEATURE_TABS.find(f => f.id === featureId);
+            if (!feature) {
+                showNotification('Feature introuvable', 'error');
+                return [];
+            }
+            
+            const results = [];
+            const resultsContainer = document.getElementById(`test-results-${featureId}`);
+            if (resultsContainer) {
+                resultsContainer.style.display = 'block';
+                resultsContainer.innerHTML = `
+                    <div class="test-results-header">
+                        <h4>⏳ Tests en cours...</h4>
+                    </div>
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        <div class="test-loading" style="margin: 0 auto 1rem;"></div>
+                        <p>Exécution des tests pour ${feature.label} (mode: ${currentMode})...</p>
+                    </div>
+                `;
+            }
+            
+            // Vérifier l'auth si nécessaire
+            const needsAuth = feature.endpoints.some(e => e.requiresAuth);
+            if (needsAuth && currentMode === 'backend' && !getCurrentToken()) {
+                // Essayer de se connecter automatiquement
+                await performLogin();
+                if (!getCurrentToken()) {
+                    renderTestResults([{
+                        endpoint: 'Authentification',
+                        status: 'UNAUTHORIZED',
+                        detail: 'Token manquant - connexion automatique échouée',
+                        statusCode: 401,
+                        duration: 0
+                    }], featureId);
+                    return [];
+                }
+            }
+            
+            // Tester tous les endpoints
+            for (const endpoint of feature.endpoints) {
+                const testResult = await runSingleTest(endpoint);
+                results.push(testResult);
+                
+                // Petit délai entre les tests
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            renderTestResults(results, featureId);
+            const okCount = results.filter(r => r.status === 'OK').length;
+            showNotification(`Tests terminés: ${okCount}/${results.length} réussis`, 'success');
+            return results;
+        }
+
+        async function runAllTests() {
+            console.log(`[Test] Démarrage de tous les tests (mode: ${currentMode})`);
+            
+            const allResults = [];
+            
+            for (const feature of FEATURE_TABS) {
+                const featureResults = await runAllTestsForFeature(feature.id);
+                allResults.push(...featureResults);
+                
+                // Délai entre les features
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            const okCount = allResults.filter(r => r.status === 'OK').length;
+            showNotification(`Tous les tests terminés: ${okCount}/${allResults.length} réussis`, 'success');
+            return allResults;
+        }
+
+        // ============================================
+        // FONCTIONS DE COMPARAISON
+        // ============================================
+
+        async function runComparison() {
+            console.log('[Comparaison] Démarrage de la comparaison Backend vs FakeRouter');
+            
+            const container = document.getElementById('comparison-results-container');
+            container.style.display = 'block';
+            container.innerHTML = `
+                <div class="test-results-header">
+                    <h4>⏳ Comparaison en cours...</h4>
+                </div>
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <div class="test-loading" style="margin: 0 auto 1rem;"></div>
+                    <p>Comparaison des réponses Backend vs FakeRouter...</p>
+                </div>
+            `;
+            
+            const comparisonResults = [];
+            
+            // Collecter tous les endpoints
+            for (const feature of FEATURE_TABS) {
+                for (const endpoint of feature.endpoints) {
+                    const backendResult = await runSingleTest(endpoint, 'backend');
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    const fakerouterResult = await runSingleTest(endpoint, 'fakerouter');
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // Comparer les résultats
+                    const alignment = compareResults(backendResult, fakerouterResult);
+                    
+                    comparisonResults.push({
+                        endpoint: endpoint.path,
+                        method: endpoint.method,
+                        feature: feature.label,
+                        backend: backendResult.status,
+                        backendDetail: backendResult.detail,
+                        fakerouter: fakerouterResult.status,
+                        fakerouterDetail: fakerouterResult.detail,
+                        alignment: alignment.status,
+                        alignmentDetail: alignment.detail
+                    });
+                }
+            }
+            
+            renderComparisonResults(comparisonResults);
+            showNotification('Comparaison terminée', 'success');
+        }
+
+        function compareResults(backendResult, fakerouterResult) {
+            // Les deux sont OK
+            if (backendResult.status === 'OK' && fakerouterResult.status === 'OK') {
+                return {
+                    status: 'OK',
+                    detail: '✅ Aligné'
+                };
+            }
+            
+            // L'un est OK et l'autre ERROR
+            if ((backendResult.status === 'OK' && fakerouterResult.status === 'ERROR') ||
+                (backendResult.status === 'ERROR' && fakerouterResult.status === 'OK')) {
+                return {
+                    status: 'ERROR',
+                    detail: '❌ Désaligné'
+                };
+            }
+            
+            // Différence de codes logiques (ex: 403 vs OK)
+            if (backendResult.statusCode !== fakerouterResult.statusCode) {
+                return {
+                    status: 'WARNING',
+                    detail: '⚠️ Différence rôle/permission'
+                };
+            }
+            
+            // Même statut mais détails différents
+            if (backendResult.status === fakerouterResult.status) {
+                return {
+                    status: 'OK',
+                    detail: '✅ Aligné (statut)'
+                };
+            }
+            
+            return {
+                status: 'WARNING',
+                detail: '⚠️ Différence'
+            };
+        }
+
+        function renderComparisonResults(results) {
+            const container = document.getElementById('comparison-results-container');
+            
+            const okCount = results.filter(r => r.alignment === 'OK').length;
+            const warningCount = results.filter(r => r.alignment === 'WARNING').length;
+            const errorCount = results.filter(r => r.alignment === 'ERROR').length;
+            
+            let html = `
+                <div class="test-results-header">
+                    <h4>🔄 Résultats de la comparaison (${okCount} alignés, ${warningCount} différences, ${errorCount} désalignés)</h4>
+                </div>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Backend</th>
+                            <th>FakeRouter</th>
+                            <th>Alignement</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            results.forEach(result => {
+                const alignmentClass = result.alignment === 'OK' ? 'alignment-ok' : 
+                                      result.alignment === 'WARNING' ? 'alignment-warning' : 'alignment-error';
+                
+                html += `
+                    <tr>
+                        <td><code style="font-size: 0.8rem;">${result.method} ${escapeHtml(result.endpoint)}</code></td>
+                        <td><span class="test-status-${result.backend.toLowerCase()}">${result.backend}</span><br><small class="test-detail">${escapeHtml(result.backendDetail)}</small></td>
+                        <td><span class="test-status-${result.fakerouter.toLowerCase()}">${result.fakerouter}</span><br><small class="test-detail">${escapeHtml(result.fakerouterDetail)}</small></td>
+                        <td><span class="${alignmentClass}">${result.alignmentDetail}</span></td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // ============================================
+        // FONCTIONS D'AFFICHAGE
+        // ============================================
+
+        function renderTestResults(results, featureId) {
+            const resultsContainer = document.getElementById(`test-results-${featureId}`);
+            if (!resultsContainer) return;
+            
+            const okCount = results.filter(r => r.status === 'OK').length;
+            const totalCount = results.length;
+            
+            let html = `
+                <div class="test-results-header">
+                    <h4>📊 Résultats des tests (${okCount}/${totalCount} OK) - Mode: ${currentMode}</h4>
+                </div>
+                <table class="test-results-table">
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Résultat</th>
+                            <th>Détail</th>
+                            <th>Temps</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            results.forEach(result => {
+                const statusClass = `test-status-${result.status.toLowerCase()}`;
+                const duration = result.duration ? `${result.duration}ms` : '—';
+                
+                html += `
+                    <tr>
+                        <td><code style="font-size: 0.8rem;">${escapeHtml(result.endpoint)}</code></td>
+                        <td><span class="${statusClass}">${result.status}</span></td>
+                        <td><span class="test-detail">${escapeHtml(result.detail)}</span></td>
+                        <td>${duration}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            resultsContainer.innerHTML = html;
+        }
+
+        function showSection(section) {
+            // Masquer toutes les sections
+            document.getElementById('section-config').style.display = 'none';
+            document.getElementById('section-compare').style.display = 'none';
+            document.querySelectorAll('.feature-section').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Retirer la classe active de tous les nav-items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Afficher la section demandée
+            if (section === 'config') {
+                document.getElementById('section-config').style.display = 'block';
+                document.getElementById('nav-config').classList.add('active');
+            } else if (section === 'compare') {
+                document.getElementById('section-compare').style.display = 'block';
+                document.getElementById('nav-compare').classList.add('active');
+            } else {
+                // Section de feature
+                const featureSection = document.getElementById(`section-feature-${section}`);
+                const navItem = document.getElementById(`nav-feature-${section}`);
+                if (featureSection) {
+                    featureSection.style.display = 'block';
+                }
+                if (navItem) {
+                    navItem.classList.add('active');
+                }
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // ============================================
+        // INITIALISATION DES FEATURES
+        // ============================================
+
+        function initFeatures() {
+            const navFeaturesList = document.getElementById('nav-features-list');
+            const featureSectionsContainer = document.getElementById('feature-sections-container');
+            
+            navFeaturesList.innerHTML = '';
+            featureSectionsContainer.innerHTML = '';
+            
+            FEATURE_TABS.forEach(feature => {
+                // Créer l'item de navigation dans la sidebar
+                const navItem = document.createElement('div');
+                navItem.className = 'nav-item';
+                navItem.id = `nav-feature-${feature.id}`;
+                navItem.textContent = `${feature.icon} ${feature.label}`;
+                navItem.onclick = () => showSection(feature.id);
+                navFeaturesList.appendChild(navItem);
+                
+                // Créer la section de contenu pour cette feature
+                const featureSection = document.createElement('div');
+                featureSection.className = 'feature-section';
+                featureSection.id = `section-feature-${feature.id}`;
+                featureSection.style.display = 'none';
+                
+                const formSection = document.createElement('div');
+                formSection.className = 'form-section';
+                
+                const titleRow = document.createElement('div');
+                titleRow.style.display = 'flex';
+                titleRow.style.justifyContent = 'space-between';
+                titleRow.style.alignItems = 'center';
+                titleRow.style.marginBottom = '1rem';
+                
+                const title = document.createElement('h3');
+                title.textContent = `${feature.icon} ${feature.label}`;
+                title.style.margin = '0';
+                titleRow.appendChild(title);
+                
+                const playTestBtn = document.createElement('button');
+                playTestBtn.className = 'btn btn-test-play btn-test';
+                playTestBtn.textContent = '▶ Play tests (feature)';
+                playTestBtn.onclick = () => runAllTestsForFeature(feature.id);
+                titleRow.appendChild(playTestBtn);
+                
+                formSection.appendChild(titleRow);
+                
+                const description = document.createElement('p');
+                description.style.fontSize = '0.875rem';
+                description.style.color = 'var(--text-muted)';
+                description.style.marginBottom = '1rem';
+                description.textContent = `Endpoints disponibles pour la feature ${feature.label}. Cliquez sur "Run test" pour tester un endpoint individuellement.`;
+                formSection.appendChild(description);
+                
+                // Conteneur pour les résultats de tests
+                const testResultsContainer = document.createElement('div');
+                testResultsContainer.id = `test-results-${feature.id}`;
+                testResultsContainer.className = 'test-results-container';
+                testResultsContainer.style.display = 'none';
+                formSection.appendChild(testResultsContainer);
+                
+                const endpointsList = document.createElement('div');
+                endpointsList.className = 'preset-list';
+                
+                feature.endpoints.forEach(endpoint => {
+                    const item = document.createElement('div');
+                    item.className = 'preset-item';
+                    
+                    const header = document.createElement('div');
+                    header.style.marginBottom = '0.5rem';
+                    
+                    const methodBadge = document.createElement('span');
+                    methodBadge.className = 'preset-method';
+                    methodBadge.textContent = endpoint.method;
+                    
+                    const path = document.createElement('span');
+                    path.className = 'preset-path';
+                    path.textContent = endpoint.path;
+                    
+                    header.appendChild(methodBadge);
+                    header.appendChild(path);
+                    
+                    const desc = document.createElement('div');
+                    desc.className = 'preset-description';
+                    desc.textContent = endpoint.description;
+                    
+                    const actions = document.createElement('div');
+                    actions.style.marginTop = '0.75rem';
+                    actions.style.display = 'flex';
+                    actions.style.gap = '0.5rem';
+                    
+                    const runTestBtn = document.createElement('button');
+                    runTestBtn.className = 'btn btn-test-run btn-test';
+                    runTestBtn.style.padding = '0.4rem 0.75rem';
+                    runTestBtn.style.fontSize = '0.75rem';
+                    runTestBtn.textContent = '▶ Run test';
+                    runTestBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        const result = await runSingleTest(endpoint);
+                        renderTestResults([result], feature.id);
+                        const container = document.getElementById(`test-results-${feature.id}`);
+                        if (container) {
+                            container.style.display = 'block';
+                        }
+                    };
+                    
+                    actions.appendChild(runTestBtn);
+                    
+                    item.appendChild(header);
+                    item.appendChild(desc);
+                    item.appendChild(actions);
+                    
+                    endpointsList.appendChild(item);
+                });
+                
+                formSection.appendChild(endpointsList);
+                featureSection.appendChild(formSection);
+                featureSectionsContainer.appendChild(featureSection);
+            });
+        }
+
+        // ============================================
+        // INITIALISATION
+        // ============================================
+
+        function init() {
+            // Charger le token depuis localStorage
+            const session = getAuthSession();
+            if (session && session.token) {
+                currentToken = session.token;
+                document.getElementById('token-info-section').style.display = 'block';
+                document.getElementById('token-display').value = session.token.substring(0, 50) + '...';
+                document.getElementById('user-display').value = session.user?.email || session.user?.full_name || 'Utilisateur';
+            }
+
+            // Initialiser les features
+            initFeatures();
+        }
+
+        // Exposer les fonctions globalement
+        window.showSection = showSection;
+        window.performLogin = performLogin;
+        window.clearToken = clearToken;
+        window.selectMode = selectMode;
+        window.runComparison = runComparison;
+        window.runAllTests = runAllTests;
+
+        // Initialiser au chargement
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+

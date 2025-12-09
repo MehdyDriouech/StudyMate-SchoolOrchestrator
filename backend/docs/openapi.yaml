@@ -1,0 +1,787 @@
+openapi: 3.0.3
+info:
+  title: StudyMate School Orchestrator API
+  description: API REST pour la gestion des assignments (assignations de thèmes aux classes)
+  version: 1.0.0
+  contact:
+    name: StudyMate Team
+
+servers:
+  - url: http://localhost/api
+    description: Serveur de développement local
+  - url: https://api.studymate.example.com/api
+    description: Serveur de production
+
+paths:
+  /auth/login:
+    post:
+      summary: Authentifie un utilisateur
+      description: Authentifie un utilisateur avec email et password, retourne un token JWT
+      operationId: login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: directeur@ecole.fr
+              password: Demo123!
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: directeur@ecole.fr
+              password: Demo123!
+      responses:
+        '200':
+          description: Authentification réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Données invalides (email ou password manquant)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /assignments:
+    get:
+      summary: Liste tous les assignments
+      description: Récupère la liste complète de tous les assignments
+      operationId: listAssignments
+      tags:
+        - Assignments
+      responses:
+        '200':
+          description: Liste des assignments récupérée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentListResponse'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    post:
+      summary: Crée un nouvel assignment
+      description: Crée un nouvel assignment avec les données fournies
+      operationId: createAssignment
+      tags:
+        - Assignments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentInput'
+            example:
+              class_id: 10
+              theme_id: 5
+              assigned_by: 3
+              start_at: "2025-09-01T08:00:00"
+              end_at: "2025-09-30T23:59:59"
+              due_at: "2025-09-15T23:59:59"
+      responses:
+        '201':
+          description: Assignment créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentResponse'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /assignments/{id}:
+    get:
+      summary: Récupère un assignment par ID
+      description: Récupère les détails d'un assignment spécifique
+      operationId: getAssignment
+      tags:
+        - Assignments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de l'assignment
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Assignment récupéré avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentResponse'
+        '404':
+          description: Assignment non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    put:
+      summary: Met à jour un assignment
+      description: Met à jour un assignment existant. Tous les champs sont optionnels.
+      operationId: updateAssignment
+      tags:
+        - Assignments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de l'assignment
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentInput'
+            example:
+              class_id: 10
+              theme_id: 5
+              assigned_by: 3
+              start_at: "2025-09-01T08:00:00"
+              end_at: "2025-09-30T23:59:59"
+              due_at: "2025-09-15T23:59:59"
+      responses:
+        '200':
+          description: Assignment mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentResponse'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Assignment non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    delete:
+      summary: Supprime un assignment
+      description: Supprime un assignment existant
+      operationId: deleteAssignment
+      tags:
+        - Assignments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de l'assignment
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Assignment supprimé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteResponse'
+        '404':
+          description: Assignment non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /social/stats:
+    get:
+      summary: Liste les stats sociales
+      description: Récupère toutes les stats sociales pour l'établissement de l'utilisateur
+      operationId: listSocialStats
+      tags:
+        - Social Stats
+      security:
+        - bearerAuth: []
+        - queryToken: []
+      responses:
+        '200':
+          description: Liste des stats sociales récupérée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialStatsListResponse'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    post:
+      summary: Crée ou met à jour une stat sociale
+      description: Crée une nouvelle stat sociale ou met à jour si elle existe déjà pour la classe et la date
+      operationId: createOrUpdateSocialStat
+      tags:
+        - Social Stats
+      security:
+        - bearerAuth: []
+        - queryToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SocialStatInput'
+            example:
+              class_id: 1
+              metric_date: "2025-10-23"
+              collaboration_score: 85.5
+              participation_rate: 92.0
+              engagement_level: "high"
+              notes: "Très bonne dynamique de groupe cette semaine"
+      responses:
+        '201':
+          description: Stat sociale créée ou mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialStatResponse'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Permission refusée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /social/stats/{id}:
+    get:
+      summary: Récupère une stat sociale par ID
+      description: Récupère les détails d'une stat sociale spécifique
+      operationId: getSocialStat
+      tags:
+        - Social Stats
+      security:
+        - bearerAuth: []
+        - queryToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la stat sociale
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Stat sociale récupérée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialStatResponse'
+        '404':
+          description: Stat sociale non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    put:
+      summary: Met à jour une stat sociale
+      description: Met à jour une stat sociale existante
+      operationId: updateSocialStat
+      tags:
+        - Social Stats
+      security:
+        - bearerAuth: []
+        - queryToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la stat sociale
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SocialStatInput'
+            example:
+              collaboration_score: 88.0
+              participation_rate: 95.0
+              engagement_level: "high"
+      responses:
+        '200':
+          description: Stat sociale mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialStatResponse'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Permission refusée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Stat sociale non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    delete:
+      summary: Supprime une stat sociale
+      description: Supprime une stat sociale existante
+      operationId: deleteSocialStat
+      tags:
+        - Social Stats
+      security:
+        - bearerAuth: []
+        - queryToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la stat sociale
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Stat sociale supprimée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteResponse'
+        '403':
+          description: Permission refusée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Stat sociale non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT dans le header Authorization (format Bearer)
+    queryToken:
+      type: apiKey
+      in: query
+      name: token
+      description: Token JWT passé en paramètre de requête (mode lenient pour compatibilité cPanel)
+
+  schemas:
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID unique de l'assignment
+          example: 1
+        class_id:
+          type: integer
+          description: ID de la classe
+          example: 10
+        theme_id:
+          type: integer
+          description: ID du thème
+          example: 5
+        assigned_by:
+          type: integer
+          description: ID de l'utilisateur qui a assigné le thème
+          example: 3
+        start_at:
+          type: string
+          format: date-time
+          description: Date et heure de début (ISO 8601)
+          example: "2025-09-01T08:00:00"
+          nullable: true
+        end_at:
+          type: string
+          format: date-time
+          description: Date et heure de fin (ISO 8601)
+          example: "2025-09-30T23:59:59"
+          nullable: true
+        due_at:
+          type: string
+          format: date-time
+          description: Date limite de rendu (ISO 8601)
+          example: "2025-09-15T23:59:59"
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          description: Date de création (ISO 8601)
+          example: "2025-08-25T10:30:00"
+      required:
+        - id
+        - class_id
+        - theme_id
+        - assigned_by
+        - created_at
+
+    AssignmentInput:
+      type: object
+      properties:
+        class_id:
+          type: integer
+          description: ID de la classe
+          example: 10
+        theme_id:
+          type: integer
+          description: ID du thème
+          example: 5
+        assigned_by:
+          type: integer
+          description: ID de l'utilisateur qui assigne le thème
+          example: 3
+        start_at:
+          type: string
+          format: date-time
+          description: Date et heure de début (ISO 8601)
+          example: "2025-09-01T08:00:00"
+          nullable: true
+        end_at:
+          type: string
+          format: date-time
+          description: Date et heure de fin (ISO 8601)
+          example: "2025-09-30T23:59:59"
+          nullable: true
+        due_at:
+          type: string
+          format: date-time
+          description: Date limite de rendu (ISO 8601)
+          example: "2025-09-15T23:59:59"
+          nullable: true
+      required:
+        - class_id
+        - theme_id
+        - assigned_by
+
+    AssignmentListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assignment'
+
+    AssignmentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Assignment'
+
+    DeleteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          nullable: true
+          example: null
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Adresse email de l'utilisateur
+          example: directeur@ecole.fr
+        password:
+          type: string
+          format: password
+          description: Mot de passe de l'utilisateur
+          example: Demo123!
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              description: Token JWT pour les requêtes authentifiées
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+            token_type:
+              type: string
+              example: Bearer
+            expires_in:
+              type: integer
+              description: Durée de validité du token en secondes
+              example: 28800
+            user:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 1
+                email:
+                  type: string
+                  format: email
+                  example: directeur@ecole.fr
+                role:
+                  type: string
+                  enum: [student, teacher, director, pedago]
+                  example: director
+                full_name:
+                  type: string
+                  example: Jean Dupont
+                school_id:
+                  type: integer
+                  nullable: true
+                  example: 1
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                  example: []
+                session_id:
+                  type: string
+                  description: Identifiant unique de session
+                  example: a1b2c3d4e5f6g7h8
+
+    SocialStat:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID unique de la stat sociale
+          example: 1
+        class_id:
+          type: integer
+          description: ID de la classe
+          example: 1
+        class_name:
+          type: string
+          description: Nom de la classe
+          example: "Terminale S1"
+        metric_date:
+          type: string
+          format: date
+          description: Date de la métrique (format Y-m-d)
+          example: "2025-10-23"
+        collaboration_score:
+          type: number
+          format: float
+          description: Score de collaboration (0-100)
+          example: 85.5
+          nullable: true
+        participation_rate:
+          type: number
+          format: float
+          description: Taux de participation (0-100)
+          example: 92.0
+          nullable: true
+        engagement_level:
+          type: string
+          enum: [low, medium, high]
+          description: Niveau d'engagement
+          example: "high"
+          nullable: true
+        notes:
+          type: string
+          description: Notes additionnelles
+          example: "Très bonne dynamique de groupe cette semaine"
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          description: Date de création
+          example: "2025-10-23T10:30:00"
+        updated_at:
+          type: string
+          format: date-time
+          description: Date de mise à jour
+          example: "2025-10-23T10:30:00"
+      required:
+        - id
+        - class_id
+        - metric_date
+        - created_at
+        - updated_at
+
+    SocialStatInput:
+      type: object
+      properties:
+        class_id:
+          type: integer
+          description: ID de la classe
+          example: 1
+        metric_date:
+          type: string
+          format: date
+          description: Date de la métrique (format Y-m-d)
+          example: "2025-10-23"
+        collaboration_score:
+          type: number
+          format: float
+          description: Score de collaboration (0-100)
+          example: 85.5
+          nullable: true
+        participation_rate:
+          type: number
+          format: float
+          description: Taux de participation (0-100)
+          example: 92.0
+          nullable: true
+        engagement_level:
+          type: string
+          enum: [low, medium, high]
+          description: Niveau d'engagement
+          example: "high"
+          nullable: true
+        notes:
+          type: string
+          description: Notes additionnelles
+          example: "Très bonne dynamique de groupe cette semaine"
+          nullable: true
+      required:
+        - class_id
+        - metric_date
+
+    SocialStatsListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SocialStat'
+
+    SocialStatResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/SocialStat'
+
+    ApiError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Message d'erreur
+          example: "Assignment not found"
+

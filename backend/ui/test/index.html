@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMSO Tester - Backend vs FakeRouter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/test-ui.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h1>SMSO Tester</h1>
+        <p class="subtitle">Backend vs FakeRouter</p>
+        
+        <div class="nav-section">
+            <h2>Navigation</h2>
+            <div class="nav-item active" id="nav-config">
+                ⚙️ Configuration
+            </div>
+            <div class="nav-item" id="nav-sandbox">
+                🧪 API Endpoints Tester
+            </div>
+            <div class="nav-item" id="nav-compare">
+                🔄 Comparaison
+            </div>
+        </div>
+        <div class="nav-section" id="nav-features-section">
+            <h2>Features</h2>
+            <div id="nav-features-list"></div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="header">
+            <h2>SMSO Tester - Outil de tests avancés</h2>
+        </header>
+
+        <div class="content-area">
+            <!-- Left Column -->
+            <div class="left-column" id="content-left">
+                <!-- Section Configuration -->
+                <div id="section-config">
+                    <form id="login-form" onsubmit="event.preventDefault();">
+                    <div class="form-section">
+                        <h3>⚙️ Configuration</h3>
+                        
+                        <div class="form-group">
+                            <label>Mode de test *</label>
+                            <div class="mode-selector">
+                                <label class="mode-option backend active">
+                                    <input type="radio" name="test-mode" value="backend" checked>
+                                    <div>
+                                        <strong>🔵 Backend réel</strong><br>
+                                        <small>API PHP</small>
+                                    </div>
+                                </label>
+                                <label class="mode-option fakerouter">
+                                    <input type="radio" name="test-mode" value="fakerouter">
+                                    <div>
+                                        <strong>🟠 FakeRouter</strong><br>
+                                        <small>JS Demo</small>
+                                    </div>
+                                </label>
+                                <label class="mode-option compare">
+                                    <input type="radio" name="test-mode" value="compare">
+                                    <div>
+                                        <strong>🔄 Comparaison</strong><br>
+                                        <small>Backend vs FakeRouter</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Base URL de l'API</label>
+                            <input type="text" id="api-base-url" value="/SMSO/backend/public/api" placeholder="/SMSO/backend/public/api">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Email de test</label>
+                            <input type="email" id="test-email" placeholder="directeur@ecole.fr" value="directeur@ecole.fr" form="login-form">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mot de passe de test</label>
+                            <input type="password" id="test-password" placeholder="••••••••" value="directeur123" form="login-form">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mode d'envoi du token</label>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="token-mode" value="query" checked>
+                                    Query ?token= (recommandé)
+                                </label>
+                                <label>
+                                    <input type="radio" name="token-mode" value="header">
+                                    Header Authorization Bearer
+                                </label>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" id="btn-login" type="submit">
+                            Se connecter
+                        </button>
+                    </div>
+                    </form>
+
+                    <div class="form-section" id="token-info-section" style="display: none;">
+                        <h3>✅ Token actif</h3>
+                        <div class="form-group">
+                            <label>Token (masqué)</label>
+                            <input type="text" id="token-display" readonly style="font-family: monospace; font-size: 0.8rem;">
+                        </div>
+                        <div class="form-group">
+                            <label>Utilisateur</label>
+                            <input type="text" id="user-display" readonly>
+                        </div>
+                        <button class="btn btn-warning" id="btn-logout">
+                            Déconnexion
+                        </button>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>🚀 Tests globaux</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                            Lance une batterie complète de tests sur toutes les features.
+                        </p>
+                        <button class="btn btn-test-play" id="btn-run-all-tests">
+                            ▶ Play ALL tests
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section API Endpoints Tester (Sandbox) -->
+                <div id="section-sandbox" style="display: none;">
+                    <div class="form-section">
+                        <h3>🧪 API Endpoints Tester</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                            Testez manuellement n'importe quel endpoint avec une méthode, un chemin et un body personnalisés.
+                        </p>
+                        
+                        <div class="form-group">
+                            <label>Méthode HTTP *</label>
+                            <select id="sandbox-method">
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
+                                <option value="DELETE">DELETE</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Chemin de l'endpoint *</label>
+                            <input type="text" id="sandbox-path" placeholder="/stats/overview" required>
+                            <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.25rem;">
+                                Le chemin sera automatiquement préfixé par l'URL de base de l'API
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Body (JSON)</label>
+                            <textarea id="sandbox-body" placeholder='{"key": "value"}' style="width: 100%; padding: 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-light); font-family: 'Courier New', monospace; font-size: 0.9rem; min-height: 120px; resize: vertical;"></textarea>
+                            <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.25rem;">
+                                Laissez vide pour GET/DELETE. Format JSON pour POST/PUT.
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="sandbox-use-auth" checked>
+                                Utiliser l'authentification (token automatique)
+                            </label>
+                        </div>
+                        
+                        <button class="btn btn-primary" id="btn-sandbox-send">
+                            Envoyer la requête
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section Comparaison -->
+                <div id="section-compare" style="display: none;">
+                    <div class="form-section">
+                        <h3>🔄 Comparaison Backend vs FakeRouter</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                            Compare les réponses du backend réel avec celles du FakeRouter pour vérifier l'alignement.
+                        </p>
+                        <button class="btn btn-test-compare" id="btn-compare">
+                            ▶ Lancer la comparaison complète
+                        </button>
+                    </div>
+                    <div id="comparison-results-container" class="test-results-container" style="display: none;"></div>
+                </div>
+
+                <!-- Sections de features (générées dynamiquement) -->
+                <div id="feature-sections-container"></div>
+            </div>
+
+            <!-- Right Column - JSON Viewer -->
+            <div class="right-column" id="content-right">
+                <div class="json-viewer">
+                    <h3>📊 Réponse JSON</h3>
+                    <div id="status-badge"></div>
+                    <div class="json-content empty" id="json-output">
+                        Aucune requête effectuée. Utilisez les formulaires à gauche pour tester l'API.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initTestUI, showSection as showSectionFn } from './js/test-ui.js';
+
+        // Exposer showSection globalement pour les onclick
+        window.showSection = showSectionFn;
+
+        // Bind les nav-items
+        window.addEventListener('DOMContentLoaded', () => {
+            initTestUI();
+            
+            // Bind les nav-items de navigation principale
+            document.getElementById('nav-config').onclick = () => showSectionFn('config');
+            document.getElementById('nav-sandbox').onclick = () => showSectionFn('sandbox');
+            document.getElementById('nav-compare').onclick = () => showSectionFn('compare');
+        });
+    </script>
+</body>
+</html>
+

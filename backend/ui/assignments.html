@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignments API Explorer - StudyMate School Orchestrator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0E1A2B;
+            --bg-darker: #0A1320;
+            --bg-sidebar: #1A2332;
+            --primary-blue: #31A8FF;
+            --primary-orange: #FFB74D;
+            --text-light: #E0E6ED;
+            --text-muted: #8B9DB0;
+            --border-color: #2A3441;
+            --success: #4CAF50;
+            --error: #F44336;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 1.5rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar .subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section h2 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-darker);
+            color: var(--primary-blue);
+        }
+
+        .nav-item.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+        }
+
+        .header h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        /* Left Column - Forms */
+        .left-column {
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .form-section {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary-blue);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2598E6;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #D32F2F;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #388E3C;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Right Column - JSON Viewer */
+        .right-column {
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .json-viewer {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .json-viewer h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary-orange);
+        }
+
+        .json-content {
+            flex: 1;
+            background: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .json-content.empty {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .status-success {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+
+        .status-error {
+            background: rgba(244, 67, 54, 0.2);
+            color: var(--error);
+        }
+
+        .status-pending {
+            background: rgba(255, 183, 77, 0.2);
+            color: var(--primary-orange);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--text-muted);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .content-area {
+                flex-direction: column;
+            }
+
+            .left-column,
+            .right-column {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h1>SMSO</h1>
+        <p class="subtitle">StudyMate School Orchestrator</p>
+        
+        <div class="nav-section">
+            <h2>API Explorer</h2>
+            <div class="nav-item active" onclick="showSection('assignments')">
+                📋 Assignments
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="header">
+            <h2>Assignments API Explorer</h2>
+        </header>
+
+        <div class="content-area">
+            <!-- Left Column - Forms -->
+            <div class="left-column">
+                <!-- GET All -->
+                <div class="form-section">
+                    <h3>📥 GET All Assignments</h3>
+                    <button class="btn btn-primary" onclick="getAllAssignments()">
+                        Récupérer tous les assignments
+                    </button>
+                </div>
+
+                <!-- GET By ID -->
+                <div class="form-section">
+                    <h3>🔍 GET Assignment by ID</h3>
+                    <div class="form-group">
+                        <label>ID</label>
+                        <input type="number" id="get-id" placeholder="1" min="1">
+                    </div>
+                    <button class="btn btn-primary" onclick="getAssignmentById()">
+                        Récupérer
+                    </button>
+                </div>
+
+                <!-- POST Create -->
+                <div class="form-section">
+                    <h3>➕ POST Create Assignment</h3>
+                    <div class="form-group">
+                        <label>Class ID *</label>
+                        <input type="number" id="create-class-id" placeholder="10" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Theme ID *</label>
+                        <input type="number" id="create-theme-id" placeholder="5" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned By *</label>
+                        <input type="number" id="create-assigned-by" placeholder="3" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Start At (ISO 8601) *</label>
+                        <input type="text" id="create-start-at" placeholder="2025-09-01T08:00:00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End At (ISO 8601)</label>
+                        <input type="text" id="create-end-at" placeholder="2025-09-30T23:59:59">
+                    </div>
+                    <div class="form-group">
+                        <label>Due At (ISO 8601)</label>
+                        <input type="text" id="create-due-at" placeholder="2025-09-15T23:59:59">
+                    </div>
+                    <button class="btn btn-success" onclick="createAssignment()">
+                        Créer
+                    </button>
+                </div>
+
+                <!-- PUT Update -->
+                <div class="form-section">
+                    <h3>✏️ PUT Update Assignment</h3>
+                    <div class="form-group">
+                        <label>ID *</label>
+                        <input type="number" id="update-id" placeholder="1" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Class ID</label>
+                        <input type="number" id="update-class-id" placeholder="10" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Theme ID</label>
+                        <input type="number" id="update-theme-id" placeholder="5" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned By</label>
+                        <input type="number" id="update-assigned-by" placeholder="3" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Start At (ISO 8601)</label>
+                        <input type="text" id="update-start-at" placeholder="2025-09-01T08:00:00">
+                    </div>
+                    <div class="form-group">
+                        <label>End At (ISO 8601)</label>
+                        <input type="text" id="update-end-at" placeholder="2025-09-30T23:59:59">
+                    </div>
+                    <div class="form-group">
+                        <label>Due At (ISO 8601)</label>
+                        <input type="text" id="update-due-at" placeholder="2025-09-15T23:59:59">
+                    </div>
+                    <button class="btn btn-primary" onclick="updateAssignment()">
+                        Mettre à jour
+                    </button>
+                </div>
+
+                <!-- DELETE -->
+                <div class="form-section">
+                    <h3>🗑️ DELETE Assignment</h3>
+                    <div class="form-group">
+                        <label>ID *</label>
+                        <input type="number" id="delete-id" placeholder="1" min="1" required>
+                    </div>
+                    <button class="btn btn-danger" onclick="deleteAssignment()">
+                        Supprimer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column - JSON Viewer -->
+            <div class="right-column">
+                <div class="json-viewer">
+                    <h3>📊 Réponse JSON</h3>
+                    <div id="status-badge"></div>
+                    <div class="json-content empty" id="json-output">
+                        Aucune requête effectuée. Utilisez les formulaires à gauche pour tester l'API.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Ajuster cette URL selon votre configuration locale
+        // Option 1 : Avec .htaccess (si fonctionne)
+        const API_BASE_URL = '/SMSO%20Iterative%20back/backend/public/api';
+        
+        // Option 2 : Avec api.php (si .htaccess ne fonctionne pas)
+        // const API_BASE_URL = '/SMSO%20Iterative%20back/backend/public/api.php';
+        
+        // Option 3 : Sans encodage (peut ne pas fonctionner avec les espaces)
+        // const API_BASE_URL = '/SMSO Iterative back/backend/public/api';
+
+        function showSection(section) {
+            // Navigation simple pour l'instant
+            console.log('Section:', section);
+        }
+
+        function updateJsonViewer(data, status = 'success', statusCode = 200) {
+            const output = document.getElementById('json-output');
+            const badge = document.getElementById('status-badge');
+            
+            // Mettre à jour le badge de statut
+            badge.innerHTML = '';
+            if (status === 'success') {
+                badge.innerHTML = `<span class="status-badge status-success">✓ ${statusCode} Success</span>`;
+            } else if (status === 'error') {
+                badge.innerHTML = `<span class="status-badge status-error">✗ ${statusCode} Error</span>`;
+            } else {
+                badge.innerHTML = `<span class="status-badge status-pending">⏳ Loading...</span>`;
+            }
+
+            // Mettre à jour le JSON
+            output.classList.remove('empty');
+            output.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function showError(message, statusCode = 500) {
+            updateJsonViewer(
+                { success: false, error: message },
+                'error',
+                statusCode
+            );
+        }
+
+        async function getAllAssignments() {
+            updateJsonViewer(null, 'pending');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/assignments`);
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    updateJsonViewer(
+                        { 
+                            success: false, 
+                            error: 'Réponse non-JSON reçue',
+                            raw_response: text.substring(0, 500),
+                            status: response.status
+                        },
+                        'error',
+                        response.status
+                    );
+                    return;
+                }
+                
+                updateJsonViewer(data, response.ok ? 'success' : 'error', response.status);
+            } catch (error) {
+                showError('Erreur réseau: ' + error.message);
+            }
+        }
+
+        async function getAssignmentById() {
+            const id = document.getElementById('get-id').value;
+            
+            if (!id || id < 1) {
+                showError('Veuillez entrer un ID valide', 400);
+                return;
+            }
+
+            updateJsonViewer(null, 'pending');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/assignments/${id}`);
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    updateJsonViewer(
+                        { 
+                            success: false, 
+                            error: 'Réponse non-JSON reçue',
+                            raw_response: text.substring(0, 500),
+                            status: response.status
+                        },
+                        'error',
+                        response.status
+                    );
+                    return;
+                }
+                
+                updateJsonViewer(data, response.ok ? 'success' : 'error', response.status);
+            } catch (error) {
+                showError('Erreur réseau: ' + error.message);
+            }
+        }
+
+        async function createAssignment() {
+            const classId = document.getElementById('create-class-id').value;
+            const themeId = document.getElementById('create-theme-id').value;
+            const assignedBy = document.getElementById('create-assigned-by').value;
+            const startAt = document.getElementById('create-start-at').value || null;
+            const endAt = document.getElementById('create-end-at').value || null;
+            const dueAt = document.getElementById('create-due-at').value || null;
+
+            if (!classId || !themeId || !assignedBy || !startAt) {
+                showError('Les champs Class ID, Theme ID, Assigned By et Start At sont requis', 400);
+                return;
+            }
+
+            const payload = {
+                class_id: parseInt(classId),
+                theme_id: parseInt(themeId),
+                assigned_by: parseInt(assignedBy),
+            };
+
+            if (startAt) payload.start_at = startAt;
+            if (endAt) payload.end_at = endAt;
+            if (dueAt) payload.due_at = dueAt;
+
+            updateJsonViewer(null, 'pending');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/assignments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+                
+                // Lire le texte brut d'abord pour debug
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    // Si ce n'est pas du JSON, afficher la réponse brute
+                    updateJsonViewer(
+                        { 
+                            success: false, 
+                            error: 'Réponse non-JSON reçue',
+                            raw_response: text.substring(0, 500),
+                            status: response.status,
+                            statusText: response.statusText
+                        },
+                        'error',
+                        response.status
+                    );
+                    return;
+                }
+                
+                updateJsonViewer(data, response.ok ? 'success' : 'error', response.status);
+                
+                if (response.ok) {
+                    // Réinitialiser le formulaire
+                    document.getElementById('create-class-id').value = '';
+                    document.getElementById('create-theme-id').value = '';
+                    document.getElementById('create-assigned-by').value = '';
+                    document.getElementById('create-start-at').value = '';
+                    document.getElementById('create-end-at').value = '';
+                    document.getElementById('create-due-at').value = '';
+                }
+            } catch (error) {
+                showError('Erreur réseau: ' + error.message);
+            }
+        }
+
+        async function updateAssignment() {
+            const id = document.getElementById('update-id').value;
+            
+            if (!id || id < 1) {
+                showError('Veuillez entrer un ID valide', 400);
+                return;
+            }
+
+            const payload = {};
+            const classId = document.getElementById('update-class-id').value;
+            const themeId = document.getElementById('update-theme-id').value;
+            const assignedBy = document.getElementById('update-assigned-by').value;
+            const startAt = document.getElementById('update-start-at').value;
+            const endAt = document.getElementById('update-end-at').value;
+            const dueAt = document.getElementById('update-due-at').value;
+
+            if (classId) payload.class_id = parseInt(classId);
+            if (themeId) payload.theme_id = parseInt(themeId);
+            if (assignedBy) payload.assigned_by = parseInt(assignedBy);
+            if (startAt) payload.start_at = startAt;
+            if (endAt) payload.end_at = endAt;
+            if (dueAt) payload.due_at = dueAt;
+
+            if (Object.keys(payload).length === 0) {
+                showError('Veuillez remplir au moins un champ à mettre à jour', 400);
+                return;
+            }
+
+            updateJsonViewer(null, 'pending');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/assignments/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+                
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    updateJsonViewer(
+                        { 
+                            success: false, 
+                            error: 'Réponse non-JSON reçue',
+                            raw_response: text.substring(0, 500),
+                            status: response.status
+                        },
+                        'error',
+                        response.status
+                    );
+                    return;
+                }
+                
+                updateJsonViewer(data, response.ok ? 'success' : 'error', response.status);
+            } catch (error) {
+                showError('Erreur réseau: ' + error.message);
+            }
+        }
+
+        async function deleteAssignment() {
+            const id = document.getElementById('delete-id').value;
+            
+            if (!id || id < 1) {
+                showError('Veuillez entrer un ID valide', 400);
+                return;
+            }
+
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer l'assignment #${id} ?`)) {
+                return;
+            }
+
+            updateJsonViewer(null, 'pending');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/assignments/${id}`, {
+                    method: 'DELETE',
+                });
+                
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    updateJsonViewer(
+                        { 
+                            success: false, 
+                            error: 'Réponse non-JSON reçue',
+                            raw_response: text.substring(0, 500),
+                            status: response.status
+                        },
+                        'error',
+                        response.status
+                    );
+                    return;
+                }
+                
+                updateJsonViewer(data, response.ok ? 'success' : 'error', response.status);
+                
+                if (response.ok) {
+                    document.getElementById('delete-id').value = '';
+                }
+            } catch (error) {
+                showError('Erreur réseau: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
+
