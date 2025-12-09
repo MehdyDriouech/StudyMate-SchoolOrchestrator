@@ -54,41 +54,90 @@ SMSO/
 
 ## 🚀 Installation et démarrage
 
-### Frontend (Application SPA)
+### Prérequis
 
-#### Option 1 : Serveur Python (recommandé)
+- **AMPPS** (ou XAMPP) installé et démarré
+- **PHP 7.4+** (inclus dans AMPPS)
+- **MySQL/MariaDB** (inclus dans AMPPS)
 
-```bash
-python3 -m http.server 8080
+### Installation
+
+1. **Placez le projet dans le dossier `www` d'AMPPS**
+   ```
+   C:\Program Files\Ampps\www\SMSO\
+   ```
+
+2. **Accédez à l'application frontend**
+   ```
+   http://localhost/SMSO/
+   ```
+
+### Configuration du backend MySQL
+
+#### 1. Créer la base de données
+
+Ouvrez phpMyAdmin (via AMPPS) et créez une nouvelle base de données nommée `smso` (ou le nom de votre choix).
+
+#### 2. Importer les données de test
+
+Importez le fichier SQL suivant dans votre base de données :
+```
+backend/sql/smso.sql
 ```
 
-Puis ouvrez : http://localhost:8080
+Ce fichier contient :
+- Le schéma complet de la base de données
+- Des données de test (écoles, utilisateurs, classes, devoirs, etc.)
 
-#### Option 2 : Serveur Node.js
+#### 3. Comptes de test inclus
 
-```bash
-npm install -g http-server
-http-server -p 8080
+Après l'import, vous disposez de plusieurs comptes utilisateurs :
+
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| Directeur d'école | `directeur@ecole.fr` | `Azerty12345!` |
+| Enseignant | `enseignant@ecole.fr` | `Demo1234!` |
+| Élève | `eleve@ecole.fr` | `Demo1234!` |
+| Pédagogue | `pedago@ecole.fr` | `Demo1234!` |
+| Campus Admin | `campus@admin.fr` | `Demo1234!` |
+
+**Note** : Tous les utilisateurs ont le mot de passe `Demo1234!` sauf le directeur d'école qui a `Azerty12345!`
+
+#### 4. Configurer la connexion à la base de données
+
+Modifiez le fichier `backend/src/Config/config.php` avec vos paramètres de base de données :
+
+```php
+return [
+    'database' => [
+        'host' => 'localhost',        // Hôte MySQL (généralement localhost)
+        'port' => 3306,               // Port MySQL (généralement 3306)
+        'dbname' => 'smso',           // Nom de votre base de données
+        'charset' => 'utf8mb4',
+        'username' => 'root',          // Votre utilisateur MySQL
+        'password' => 'root1',         // Votre mot de passe MySQL
+    ],
+    // ... reste de la configuration
+];
 ```
 
-#### Option 3 : AMPPS / XAMPP
+**Important** : Ajustez les valeurs `username` et `password` selon votre configuration AMPPS (par défaut souvent `root` / `root1` ou `root` / `mysql`).
 
-Si vous utilisez AMPPS ou XAMPP, placez le projet dans le dossier `www` et accédez-y via :
+#### 5. Accéder à l'API
+
+Une fois la base de données configurée, l'API est accessible via :
 ```
-http://localhost/SMSO/
+http://localhost/SMSO/backend/public/api
 ```
 
-### Backend PHP
+#### 6. Tester l'API
 
-Le backend PHP nécessite un serveur web avec PHP 7.4+ et MySQL/MariaDB.
+Utilisez l'outil de test intégré pour vérifier que tout fonctionne :
+```
+http://localhost/SMSO/backend/ui/testendpoint.html
+```
 
-#### Configuration
-
-1. Configurez la base de données dans `backend/src/Config/Database.php`
-2. Importez les schémas SQL depuis `backend/sql/`
-3. Accédez à l'API via : `http://localhost/SMSO/backend/public/api`
-
-Pour plus de détails, consultez `backend/README.md`.
+Connectez-vous avec un des comptes de test pour obtenir un token JWT et tester les endpoints.
 
 ## 🎭 Mode Démo
 
@@ -157,9 +206,19 @@ Le design réutilise intégralement le CSS d'ErgoMate :
 
 ## 🔧 Configuration
 
+### Frontend
+
 Voir `js/config.js` pour modifier :
-- `DEMO_MODE` : Active/désactive le mode démo
-- `API_BASE_URL` : URL de l'API réelle (future)
+- `DEMO_MODE` : Active/désactive le mode démo (par défaut : `true`)
+- `FORCE_REAL_API` : Force l'utilisation de l'API réelle au lieu du mode démo
+- `API_BASE_URL` : URL de l'API réelle (par défaut : `/SMSO/backend/public/api`)
+
+### Backend
+
+Voir `backend/src/Config/config.php` pour configurer :
+- Connexion à la base de données MySQL
+- Paramètres d'authentification JWT
+- Configuration de l'environnement (dev/prod)
 
 ## 🧪 Test des endpoints API
 
@@ -546,14 +605,33 @@ const response = await api.delete('/endpoint/123');
 - ✅ Safari (iOS 14+)
 - ✅ Responsive mobile
 
-## 🚧 Roadmap
+## 🚧 Features à venir
 
-- [ ] Intégration Chart.js pour graphiques
-- [ ] Implémentation des features en stub
-- [ ] Connexion backend réel
-- [ ] Tests unitaires
-- [ ] Service Worker pour PWA
-- [ ] Authentification JWT
+### Authentification
+- [ ] **Connexion via magic-link** : Authentification sans mot de passe par email
+
+### Notifications et communications
+- [ ] **Envoi de mails divers et variés** : 
+  - Rappels de devoirs pour les élèves
+  - Notifications de nouvelles soumissions pour les enseignants
+  - Alertes de dates limites approchantes
+  - Résumés hebdomadaires d'activité
+- [ ] **Moteur de notifications** : 
+  - Système de notifications en temps réel
+  - Notifications push pour l'application
+  - Centre de notifications centralisé
+
+### Application offline-first
+- [ ] **Service Worker** : Mise en cache pour fonctionnement hors ligne
+- [ ] **Synchronisation automatique** : Synchronisation des données lors du retour en ligne
+- [ ] **Gestion des conflits** : Résolution automatique des conflits de synchronisation
+- [ ] **Indicateur de statut** : Affichage de l'état de connexion (en ligne/hors ligne)
+
+### Autres améliorations
+- [ ] Intégration Chart.js pour graphiques avancés
+- [ ] Implémentation complète des features en stub
+- [ ] Tests unitaires et d'intégration
+- [ ] Amélioration de la sécurité (CSRF, XSS)
 
 ## 📄 Licence
 
