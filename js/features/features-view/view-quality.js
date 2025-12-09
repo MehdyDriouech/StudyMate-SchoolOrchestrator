@@ -10,6 +10,13 @@ import {
 } from '../features-control/feature-quality.js';
 
 import { getUserRole } from '../features-control/feature-auth.js';
+import {
+  fetchThemeReviews,
+  createThemeReview,
+  getThemeReviews,
+  isLoading,
+  getError
+} from '../features-control/store-theme-reviews.js';
 
 let qualityContainer = null;
 let qualityModal = null;
@@ -148,11 +155,25 @@ function renderStatusBadge(status) {
   return `<span class="badge" style="background:${info.color}; color:white; border:none;">${info.label}</span>`;
 }
 
-function openQualityModal(themeId) {
+async function openQualityModal(themeId) {
   const theme = getThemeById(themeId);
   if (!theme) return;
   const role = getUserRole();
   const isReadOnly = role === 'teacher';
+  const canReview = ['pedago', 'director', 'quality'].includes(role);
+
+  // Charger les reviews
+  let reviews = [];
+  let reviewsLoading = true;
+  let reviewsError = null;
+  
+  try {
+    reviews = await fetchThemeReviews(themeId);
+    reviewsLoading = false;
+  } catch (error) {
+    reviewsError = error.message;
+    reviewsLoading = false;
+  }
 
   qualityModal?.remove();
   qualityModal = document.createElement('div');
@@ -162,8 +183,8 @@ function openQualityModal(themeId) {
     <div class="card quality-modal__dialog">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <div>
-          <h3 style="margin:0;">${theme.title}</h3>
-          <small style="color:var(--muted);">${theme.subject} • ${theme.author}</small>
+          <h3 style="margin:0;">${escapeHtml(theme.title)}</h3>
+          <small style="color:var(--muted);">${escapeHtml(theme.subject)} • ${escapeHtml(theme.author)}</small>
         </div>
         <button class="btn ghost" data-close>✕</button>
       </div>
@@ -175,13 +196,13 @@ function openQualityModal(themeId) {
         <div style="margin-bottom:12px;">
           <strong>Classes cibles :</strong>
           <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
-            ${theme.classes.map(c => `<span class="badge ghost" style="font-size:0.8rem;">${c.label || c}</span>`).join('')}
+            ${theme.classes.map(c => `<span class="badge ghost" style="font-size:0.8rem;">${escapeHtml(c.label || c)}</span>`).join('')}
           </div>
         </div>
       ` : ''}
       <div style="margin-bottom:16px; background:var(--card-hover); padding:12px; border-radius:var(--radius-md);">
         <strong>Aperçu :</strong>
-        <p style="margin:8px 0 0;">${theme.preview || theme.description || 'Aucun aperçu disponible'}</p>
+        <p style="margin:8px 0 0;">${escapeHtml(theme.preview || theme.description || 'Aucun aperçu disponible')}</p>
         ${theme.origin === 'ai_theme_studio' && theme.quiz ? `
           <div style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(148,163,184,0.3);">
             <strong style="font-size:0.9rem;">Contenus générés :</strong>
@@ -193,23 +214,60 @@ function openQualityModal(themeId) {
           </div>
         ` : ''}
       </div>
-      <div>
-        <strong>Timeline</strong>
-        <div class="quality-timeline">
-          ${theme.timeline.map(item => `
-            <div class="quality-timeline__item">
-              <div style="font-weight:600;">${formatDate(item.at)}</div>
-              <div style="color:var(--muted);">${item.label}</div>
+      
+      <!-- Historique Qualité -->
+      ${canReview ? `
+        <div style="margin-bottom:16px; border-top:1px solid var(--card-border); padding-top:16px;">
+          <h4 style="margin-bottom:12px;">📋 Historique Qualité</h4>
+          ${reviewsLoading ? `
+            <div style="text-align:center; padding:20px; color:var(--muted);">
+              <div style="font-size:1.5rem; margin-bottom:8px;">⏳</div>
+              Chargement des reviews...
             </div>
-          `).join('')}
+          ` : reviewsError ? `
+            <div style="padding:12px; background:rgba(239,68,68,0.1); border-radius:var(--radius-md); color:var(--danger);">
+              ⚠️ Erreur: ${escapeHtml(reviewsError)}
+            </div>
+          ` : reviews.length === 0 ? `
+            <div style="padding:12px; background:var(--card-hover); border-radius:var(--radius-md); color:var(--muted); text-align:center;">
+              Aucune review pour le moment
+            </div>
+          ` : `
+            <div class="quality-reviews-list" style="max-height:300px; overflow-y:auto; margin-bottom:12px;">
+              ${reviews.map(review => renderReviewItem(review)).join('')}
+            </div>
+          `}
+          
+          <!-- Formulaire nouvelle review -->
+          <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--card-border);">
+            <h5 style="margin-bottom:8px; font-size:0.95rem;">Nouvelle review</h5>
+            <form id="quality-review-form" data-theme-id="${themeId}">
+              <div style="margin-bottom:12px;">
+                <label style="display:block; margin-bottom:4px; font-size:0.9rem; font-weight:600;">Action</label>
+                <select id="review-action" required style="width:100%; padding:8px; border:1px solid var(--card-border); border-radius:var(--radius-md); background:var(--card);">
+                  <option value="">Sélectionner une action</option>
+                  <option value="submitted">Soumis pour validation</option>
+                  <option value="approved">Approuvé</option>
+                  <option value="needs_changes">Nécessite des modifications</option>
+                  <option value="rejected">Rejeté</option>
+                </select>
+              </div>
+              <div style="margin-bottom:12px;">
+                <label style="display:block; margin-bottom:4px; font-size:0.9rem; font-weight:600;">Commentaire (optionnel)</label>
+                <textarea id="review-comment" rows="3" style="width:100%; padding:8px; border:1px solid var(--card-border); border-radius:var(--radius-md); background:var(--card); resize:vertical;"></textarea>
+              </div>
+              <button type="submit" class="btn primary" style="width:100%;">Valider la review</button>
+            </form>
+          </div>
         </div>
-      </div>
+      ` : ''}
+      
       ${isReadOnly ? `
         <p style="color:var(--muted); font-size:0.9rem; margin-top:12px;">
           Vous êtes en lecture seule. Contactez la direction pour valider.
         </p>
       ` : `
-        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; border-top:1px solid var(--card-border); padding-top:16px;">
           <button class="btn success" data-action="approved" data-theme="${theme.id}">✅ Valider</button>
           <button class="btn warning" data-action="needs_revision" data-theme="${theme.id}">✏️ Demander correction</button>
           <button class="btn danger" data-action="rejected" data-theme="${theme.id}">❌ Rejeter</button>
@@ -234,23 +292,65 @@ function openQualityModal(themeId) {
       .quality-modal__dialog {
         position:relative;
         width:calc(100% - 32px);
-        max-width:520px;
+        max-width:600px;
         max-height:90vh;
         overflow-y:auto;
         z-index:1;
       }
-      .quality-timeline {
-        border-left:2px solid rgba(148,163,184,0.4);
-        margin-top:8px;
-        padding-left:12px;
+      .quality-reviews-list {
+        display:flex;
+        flex-direction:column;
+        gap:12px;
       }
-      .quality-timeline__item {
-        margin-bottom:10px;
+      .quality-review-item {
+        padding:12px;
+        background:var(--card-hover);
+        border-radius:var(--radius-md);
+        border-left:3px solid var(--muted);
+      }
+      .quality-review-item.approved {
+        border-left-color:var(--success, #16a34a);
+      }
+      .quality-review-item.rejected {
+        border-left-color:var(--danger);
+      }
+      .quality-review-item.needs_changes {
+        border-left-color:var(--warning);
+      }
+      .quality-review-item.submitted {
+        border-left-color:var(--accent);
       }
     </style>
   `;
 
   document.body.appendChild(qualityModal);
+
+  // Gérer le formulaire de review
+  if (canReview) {
+    const form = qualityModal.querySelector('#quality-review-form');
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const action = qualityModal.querySelector('#review-action').value;
+        const comment = qualityModal.querySelector('#review-comment').value;
+        
+        if (!action) {
+          alert('Veuillez sélectionner une action');
+          return;
+        }
+
+        try {
+          await createThemeReview(themeId, { action, comment });
+          showQualityNotification('✅ Review créée avec succès');
+          // Recharger la modale
+          closeQualityModal();
+          await openQualityModal(themeId);
+        } catch (error) {
+          alert(`Erreur: ${error.message}`);
+        }
+      });
+    }
+  }
 
   qualityModal.addEventListener('click', event => {
     if (event.target.dataset.close !== undefined) {
@@ -265,6 +365,44 @@ function openQualityModal(themeId) {
       renderQualityContent();
     }
   });
+}
+
+function renderReviewItem(review) {
+  const actionLabels = {
+    submitted: { label: 'Soumis', icon: '📤', color: 'var(--accent)' },
+    approved: { label: 'Approuvé', icon: '✅', color: 'var(--success, #16a34a)' },
+    rejected: { label: 'Rejeté', icon: '❌', color: 'var(--danger)' },
+    needs_changes: { label: 'Modifications requises', icon: '✏️', color: 'var(--warning)' }
+  };
+  
+  const actionInfo = actionLabels[review.action] || { label: review.action, icon: '📝', color: 'var(--muted)' };
+  
+  return `
+    <div class="quality-review-item ${review.action}">
+      <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:1.2rem;">${actionInfo.icon}</span>
+          <strong style="color:${actionInfo.color};">${actionInfo.label}</strong>
+        </div>
+        <small style="color:var(--muted);">${formatDate(review.created_at)}</small>
+      </div>
+      ${review.comment ? `
+        <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(148,163,184,0.2); color:var(--muted); font-size:0.9rem;">
+          ${escapeHtml(review.comment)}
+        </div>
+      ` : ''}
+      <div style="margin-top:8px; font-size:0.85rem; color:var(--muted);">
+        Reviewer ID: ${review.reviewer_id}
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 function closeQualityModal() {

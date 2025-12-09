@@ -29,6 +29,7 @@ const VIEWS = {
   'dashboard-director': 'view-dashboard-director',
   'dashboard-student': 'view-dashboard-student',
   'dashboard-pedago': 'view-dashboard-pedago',
+  'dashboard-campus-admin': 'view-dashboard-campus-admin',
   curriculum: 'view-curriculum-builder',
   library: 'view-library',
   catalog: 'view-catalog-library',
@@ -63,12 +64,20 @@ const VIEWS = {
   'director-analytics/school': 'view-director-analytics',
   'director-analytics/inter': 'view-director-analytics',
   'director-analytics/usage-heatmap': 'view-director-analytics',
-  'pedago-curriculum': 'view-pedago-curriculum'
+  'social-admin': 'view-social-admin',
+  'pedago-curriculum': 'view-pedago-curriculum',
+  'campus-admin': 'view-campus-admin',
+  'campus-admin/schools': 'view-campus-admin-schools',
+  'campus-admin/users': 'view-campus-admin-users',
+  'campus-admin/imports': 'view-campus-admin-imports',
+  'campus-admin/settings': 'view-campus-admin-settings',
+  'campus-admin/audit-logs': 'view-campus-admin-auditlogs'
 };
 
 const VIEW_PERMISSIONS = {
   'ai-theme-studio': ['teacher', 'director', 'pedago'],
   'dashboard-pedago': ['pedago'],
+  'dashboard-campus-admin': ['campus_admin'],
   'admin': ['director', 'pedago'],
   'quality': ['teacher', 'director', 'pedago'],
   'library': ['teacher', 'director', 'pedago'],
@@ -97,9 +106,16 @@ const VIEW_PERMISSIONS = {
   'director-analytics/school': ['director'],
   'director-analytics/inter': ['director'],
   'director-analytics/usage-heatmap': ['director'],
+  'social-admin': ['director', 'admin', 'pedago'],
   'pedago-curriculum': ['pedago'],
   'training': ['student'],
-  'development': ['teacher', 'director', 'pedago']
+  'development': ['teacher', 'director', 'pedago'],
+  'campus-admin': ['campus_admin'],
+  'campus-admin/schools': ['campus_admin'],
+  'campus-admin/users': ['campus_admin'],
+  'campus-admin/imports': ['campus_admin'],
+  'campus-admin/settings': ['campus_admin'],
+  'campus-admin/audit-logs': ['campus_admin']
 };
 
 /**
@@ -462,7 +478,7 @@ let onboardingCheckInProgress = false;
  */
 function checkAndShowRoleOnboarding(viewName) {
   // Vérifier si c'est un dashboard
-  const dashboardViews = ['dashboard-teacher', 'dashboard-student', 'dashboard-director', 'dashboard-pedago'];
+  const dashboardViews = ['dashboard-teacher', 'dashboard-student', 'dashboard-director', 'dashboard-pedago', 'dashboard-campus-admin'];
   if (!dashboardViews.includes(viewName)) {
     return;
   }

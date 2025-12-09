@@ -64,6 +64,21 @@ export const NAVIGATION_CONFIG = {
       { view: 'timeline-pedago', label: '📅 Historique' }
     ],
     sidebars: {} // Pas de sidebar pour le référent pédagogique
+  },
+  campus_admin: {
+    topNav: [
+      { view: 'dashboard-campus-admin', label: '📊 Dashboard' },
+      { view: 'campus-admin', label: '⚙️ Administration' }
+    ],
+    sidebars: {
+      'campus-admin': [
+        { route: 'campus-admin/schools', label: '🏫 Établissements' },
+        { route: 'campus-admin/users', label: '👥 Utilisateurs' },
+        { route: 'campus-admin/imports', label: '📥 Imports' },
+        { route: 'campus-admin/settings', label: '⚙️ Paramètres' },
+        { route: 'campus-admin/audit-logs', label: '📋 Logs d\'audit' }
+      ]
+    }
   }
 };
 

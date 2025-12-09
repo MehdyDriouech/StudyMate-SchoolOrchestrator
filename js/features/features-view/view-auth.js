@@ -13,6 +13,7 @@ import { navigateTo } from '../../app.js';
  */
 export function renderAuthView(container) {
   console.log('[View Auth] Rendu de la vue d\'authentification');
+  console.log('[View Auth] DEMO_MODE:', CONFIG.DEMO_MODE);
   
   container.innerHTML = `
     <div style="max-width: 500px; margin: 60px auto; padding: 0 16px;">
@@ -57,8 +58,11 @@ export function renderAuthView(container) {
             <div style="margin-bottom: 8px;">
               🧭 <strong>Directeur pédagogique :</strong> pedago@ecole.fr / smso01**
             </div>
-            <div>
+            <div style="margin-bottom: 8px;">
               🎓 <strong>Étudiant :</strong> etudiant@ecole.fr / smso01**
+            </div>
+            <div>
+              🏛️ <strong>Administrateur Campus :</strong> campusadmin@ecole.fr / smso01**
             </div>
           </div>
         </div>

@@ -3,15 +3,21 @@
  * Gère les sous-routes : school, inter, usage-heatmap
  */
 
+console.log('[View Director Analytics] Module en cours de chargement...');
+
 import { getSubRoute } from '../../components/NavigationManager.js';
 import { loadDirectorDashboardData } from '../features-control/feature-dashboard-director.js';
 import { getAllSchools } from '../features-control/store-multischool.js';
-import { navigateTo } from '../../app.js';
 import { renderDirectorUsageHeatmapView } from './view-director-usage-heatmap.js';
+import {
+  fetchSchoolStats,
+  getSchoolStats,
+  isLoadingSchools,
+  getSchoolsError
+} from '../features-control/store-stats.js';
+import { makeBarChart, destroyChartInstance } from '../../components/ChartFactory.js';
 
-console.log('[View Director Analytics] ✅ Module chargé avec succès');
-
-let analyticsContainer = null;
+console.log('[View Director Analytics] Imports terminés');
 
 /**
  * Rend la vue analytics du directeur
@@ -19,70 +25,34 @@ let analyticsContainer = null;
  * @param {string} route - Route actuelle
  */
 export async function renderDirectorAnalyticsView(container, route = 'director-analytics') {
-  console.log('[View Director Analytics] Rendu des analytics, route:', route);
-  console.log('[View Director Analytics] Container:', container);
-  console.log('[View Director Analytics] Container existe:', !!container);
+  console.log('[View Director Analytics] Rendu de l\'analytics, route:', route);
   
   if (!container) {
-    console.error('[View Director Analytics] Container est null ou undefined!');
+    console.error('[View Director Analytics] Container est null!');
     return;
   }
   
-  // S'assurer que le conteneur est visible
-  if (container.style) {
-    container.style.display = 'block';
-    container.style.visibility = 'visible';
-    container.style.opacity = '1';
-  }
-  
-  analyticsContainer = container;
   const subRoute = getSubRoute(route);
-  console.log('[View Director Analytics] Sous-route extraite:', subRoute);
-  
-  // Si pas de sous-route, rendre directement la première (school) au lieu de rediriger
   const routeToRender = subRoute || 'school';
-  console.log('[View Director Analytics] Route à rendre:', routeToRender);
   
-  // Router vers la bonne vue selon la sous-route
   try {
     switch (routeToRender) {
       case 'school':
-        console.log('[View Director Analytics] Rendu de school stats');
         await renderSchoolStatsView(container);
         break;
       case 'inter':
-        console.log('[View Director Analytics] Rendu de inter school comparison');
-        renderInterSchoolComparisonView(container);
+        await renderInterSchoolComparisonView(container);
         break;
       case 'usage-heatmap':
-        console.log('[View Director Analytics] Rendu de usage heatmap');
         await renderDirectorUsageHeatmapView(container);
         break;
       default:
-        console.warn('[View Director Analytics] Sous-route inconnue:', routeToRender);
         container.innerHTML = `
           <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center; padding: 24px;">
             <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
             <h2>Sous-route inconnue</h2>
             <p style="color: var(--muted); margin: 16px 0;">
-              La route "${subRoute}" n'existe pas.
-            </p>
-          </div>
-        `;
-    }
-    
-    console.log('[View Director Analytics] Rendu terminé, innerHTML length:', container.innerHTML.length);
-    console.log('[View Director Analytics] Container visible:', container.offsetWidth > 0 && container.offsetHeight > 0);
-    
-    // Vérifier que le contenu est bien rendu
-    if (container.innerHTML.length === 0) {
-      console.error('[View Director Analytics] ERREUR: Le conteneur est vide après le rendu!');
-      container.innerHTML = `
-        <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center; padding: 24px;">
-          <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
-          <h2>Erreur de rendu</h2>
-          <p style="color: var(--danger); margin: 16px 0;">
-            Le contenu n'a pas pu être rendu. Route: ${route}, Sous-route: ${subRoute}
+              La route "${routeToRender}" n'existe pas.
           </p>
         </div>
       `;
@@ -101,17 +71,25 @@ export async function renderDirectorAnalyticsView(container, route = 'director-a
   }
 }
 
-// S'assurer que la fonction est disponible dans window immédiatement après sa déclaration
-if (typeof window !== 'undefined') {
+// Export global pour app.js (doit être fait immédiatement au niveau du module)
+try {
   window.renderDirectorAnalyticsView = renderDirectorAnalyticsView;
-  console.log('[View Director Analytics] Fonction assignée à window.renderDirectorAnalyticsView');
+  console.log('[View Director Analytics] ✅ Fonction exportée globalement: renderDirectorAnalyticsView');
+  console.log('[View Director Analytics] Vérification:', typeof window.renderDirectorAnalyticsView === 'function' ? 'OK' : 'ERREUR');
+} catch (error) {
+  console.error('[View Director Analytics] ❌ Erreur lors de l\'export global:', error);
 }
+
+// Export par défaut aussi
+export default { renderDirectorAnalyticsView };
+
+let analyticsContainer = null;
 
 /**
  * Rend la vue des stats de l'établissement
  */
 async function renderSchoolStatsView(container) {
-  console.log('[View Director Analytics] renderSchoolStatsView appelée, container:', container);
+  console.log('[View Director Analytics] renderSchoolStatsView appelée');
   
   if (!container) {
     console.error('[View Director Analytics] renderSchoolStatsView: container est null!');
@@ -122,14 +100,7 @@ async function renderSchoolStatsView(container) {
     const dashboardData = await loadDirectorDashboardData();
     console.log('[View Director Analytics] Dashboard data chargée:', !!dashboardData);
     
-    // Vérifier que les données sont valides
     if (!dashboardData || !dashboardData.stats || !dashboardData.classesComparison || !dashboardData.teachersPerformance) {
-      console.warn('[View Director Analytics] Données incomplètes:', {
-        hasData: !!dashboardData,
-        hasStats: !!dashboardData?.stats,
-        hasClassesComparison: !!dashboardData?.classesComparison,
-        hasTeachersPerformance: !!dashboardData?.teachersPerformance
-      });
       container.innerHTML = `
         <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center; padding: 24px;">
           <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
@@ -143,16 +114,11 @@ async function renderSchoolStatsView(container) {
     }
   
     const { stats, classesComparison, teachersPerformance } = dashboardData;
-  
-    // Calculer le total des élèves
     const totalStudents = classesComparison.reduce((sum, cls) => sum + (cls.studentsCount || 0), 0);
-  
-    // Calculer la moyenne des notes
     const avgGrade = classesComparison.length > 0
       ? classesComparison.reduce((sum, cls) => sum + (cls.avgGrade || 0), 0) / classesComparison.length
       : 0;
   
-    // Créer les KPIs
     const kpis = {
       totalStudents,
       totalClasses: stats.totalClasses || 0,
@@ -160,7 +126,6 @@ async function renderSchoolStatsView(container) {
       averageGrade: avgGrade
     };
   
-    // Trier les classes par taux de complétion (top 5)
     const topClasses = classesComparison
       .sort((a, b) => (b.completionRate || 0) - (a.completionRate || 0))
       .slice(0, 5)
@@ -170,7 +135,6 @@ async function renderSchoolStatsView(container) {
         avgCompletion: cls.completionRate || 0
       }));
   
-    // Trier les enseignants par taux de complétion moyen (top 5)
     const topTeachers = teachersPerformance
       .sort((a, b) => (b.avgCompletionRate || 0) - (a.avgCompletionRate || 0))
       .slice(0, 5)
@@ -180,7 +144,6 @@ async function renderSchoolStatsView(container) {
         avgCompletion: teacher.avgCompletionRate || 0
       }));
   
-    console.log('[View Director Analytics] Génération du HTML pour school stats');
     container.innerHTML = `
     <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
       <div style="margin-bottom: 32px;">
@@ -192,7 +155,6 @@ async function renderSchoolStatsView(container) {
         </p>
       </div>
       
-      <!-- KPIs -->
       <div style="
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -229,7 +191,6 @@ async function renderSchoolStatsView(container) {
         </div>
       </div>
       
-      <!-- Top Classes -->
       <div class="card" style="margin-bottom: 24px;">
         <h2 style="font-size: 1.25rem; margin-bottom: 16px;">Top Classes</h2>
         <div style="display: grid; gap: 12px;">
@@ -259,7 +220,6 @@ async function renderSchoolStatsView(container) {
         </div>
       </div>
       
-      <!-- Top Teachers -->
       <div class="card">
         <h2 style="font-size: 1.25rem; margin-bottom: 16px;">Top Enseignants</h2>
         <div style="display: grid; gap: 12px;">
@@ -290,7 +250,6 @@ async function renderSchoolStatsView(container) {
       </div>
     </div>
   `;
-    console.log('[View Director Analytics] HTML généré pour school stats, length:', container.innerHTML.length);
   } catch (error) {
     console.error('[View Director Analytics] Erreur dans renderSchoolStatsView:', error);
     container.innerHTML = `
@@ -308,59 +267,146 @@ async function renderSchoolStatsView(container) {
 /**
  * Rend la vue de comparaison inter-établissements
  */
-function renderInterSchoolComparisonView(container) {
-  console.log('[View Director Analytics] renderInterSchoolComparisonView appelée, container:', container);
+async function renderInterSchoolComparisonView(container) {
+  console.log('[View Director Analytics] renderInterSchoolComparisonView appelée');
   
   if (!container) {
     console.error('[View Director Analytics] renderInterSchoolComparisonView: container est null!');
     return;
   }
   
+  container.innerHTML = `
+    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px; text-align: center;">
+      <div style="font-size: 3rem; margin-bottom: 16px; animation: pulse 1.5s ease-in-out infinite;">⏳</div>
+      <p style="color: var(--muted);">Chargement des statistiques multi-écoles...</p>
+    </div>
+  `;
+  
   try {
-    const schools = getAllSchools();
-    console.log('[View Director Analytics] Schools chargées:', schools.length);
+    const schoolStats = await fetchSchoolStats();
+    console.log('[View Director Analytics] Stats écoles chargées:', schoolStats.length);
     
-    console.log('[View Director Analytics] Génération du HTML pour inter school comparison');
+    const totalSchools = schoolStats.length;
+    const totalStudents = schoolStats.reduce((sum, s) => sum + (s.active_students || 0), 0);
+    const totalClasses = schoolStats.reduce((sum, s) => sum + (s.classes_count || 0), 0);
+    const avgScoreGlobal = schoolStats.length > 0
+      ? schoolStats.reduce((sum, s) => sum + (s.avg_score || 0), 0) / schoolStats.length
+      : 0;
+    const avgCompletionGlobal = schoolStats.length > 0
+      ? schoolStats.reduce((sum, s) => sum + (s.completion_rate || 0), 0) / schoolStats.length
+      : 0;
+    
+    const bestSchool = schoolStats.length > 0
+      ? schoolStats.reduce((best, current) => 
+          (current.avg_score || 0) > (best.avg_score || 0) ? current : best
+        )
+      : null;
+    
+    const schoolNames = schoolStats.map(s => s.school_name || `École ${s.school_id}`);
+    const avgScores = schoolStats.map(s => s.avg_score || 0);
+    const completionRates = schoolStats.map(s => (s.completion_rate || 0) * 100);
+    
     container.innerHTML = `
-    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+    <div style="max-width: 1400px; margin: 24px auto; padding: 0 16px;">
       <div style="margin-bottom: 32px;">
         <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
-          🔍 Comparaison inter-établissements
+          🔍 Dashboard Multi-Écoles
         </h1>
         <p style="color: var(--muted); font-size: 1.05rem;">
-          Comparez les performances de vos établissements
+          Vue comparative des performances de tous les établissements
         </p>
       </div>
       
+      <div style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+      ">
+        <div class="card" style="text-align: center; padding: 20px;">
+          <div style="font-size: 2rem; margin-bottom: 8px;">🏫</div>
+          <div style="font-size: 2rem; font-weight: 700; color: var(--fg); margin-bottom: 4px;">
+            ${totalSchools}
+          </div>
+          <div style="font-size: 0.9rem; color: var(--muted);">Établissements</div>
+        </div>
+        <div class="card" style="text-align: center; padding: 20px;">
+          <div style="font-size: 2rem; margin-bottom: 8px;">👥</div>
+          <div style="font-size: 2rem; font-weight: 700; color: var(--fg); margin-bottom: 4px;">
+            ${totalStudents}
+          </div>
+          <div style="font-size: 0.9rem; color: var(--muted);">Élèves actifs</div>
+        </div>
+        <div class="card" style="text-align: center; padding: 20px;">
+          <div style="font-size: 2rem; margin-bottom: 8px;">📊</div>
+          <div style="font-size: 2rem; font-weight: 700; color: var(--fg); margin-bottom: 4px;">
+            ${avgScoreGlobal.toFixed(1)}
+          </div>
+          <div style="font-size: 0.9rem; color: var(--muted);">Moyenne globale / 20</div>
+        </div>
+        <div class="card" style="text-align: center; padding: 20px;">
+          <div style="font-size: 2rem; margin-bottom: 8px;">✅</div>
+          <div style="font-size: 2rem; font-weight: 700; color: var(--fg); margin-bottom: 4px;">
+            ${(avgCompletionGlobal * 100).toFixed(1)}%
+          </div>
+          <div style="font-size: 0.9rem; color: var(--muted);">Complétion moyenne</div>
+        </div>
+      </div>
+      
+      ${bestSchool ? `
+        <div class="card" style="margin-bottom: 32px; background: rgba(16,185,129,0.1); border-left: 4px solid var(--success, #16a34a);">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="font-size: 2rem;">🏆</div>
+            <div>
+              <div style="font-weight: 600; margin-bottom: 4px;">Meilleure école</div>
+              <div style="color: var(--muted); font-size: 0.9rem;">
+                ${escapeHtml(bestSchool.school_name)} - Score moyen: ${bestSchool.avg_score.toFixed(1)}/20
+              </div>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; margin-bottom: 32px;">
+        <div class="card">
+          <h2 style="font-size: 1.25rem; margin-bottom: 16px;">📊 Score moyen par école</h2>
+          <canvas id="chart-avg-score" style="max-height: 300px;"></canvas>
+        </div>
+        <div class="card">
+          <h2 style="font-size: 1.25rem; margin-bottom: 16px;">✅ Taux de complétion par école</h2>
+          <canvas id="chart-completion-rate" style="max-height: 300px;"></canvas>
+        </div>
+      </div>
+      
       <div class="card">
-        <h2 style="font-size: 1.25rem; margin-bottom: 16px;">Comparaison</h2>
+        <h2 style="font-size: 1.25rem; margin-bottom: 16px;">📋 Détails par établissement</h2>
         <div style="overflow-x: auto;">
           <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
             <thead>
               <tr style="border-bottom: 2px solid var(--card-border);">
                 <th style="padding: 10px; text-align: left;">Établissement</th>
-                <th style="padding: 10px; text-align: center;">Élèves</th>
-                <th style="padding: 10px; text-align: center;">Classes</th>
+                <th style="padding: 10px; text-align: center;">Score moyen</th>
                 <th style="padding: 10px; text-align: center;">Complétion</th>
-                <th style="padding: 10px; text-align: center;">Moyenne</th>
+                <th style="padding: 10px; text-align: center;">Élèves actifs</th>
+                <th style="padding: 10px; text-align: center;">Classes</th>
               </tr>
             </thead>
             <tbody>
-              ${schools.map(school => `
+              ${schoolStats.map(school => `
                 <tr style="border-bottom: 1px solid var(--card-border);">
-                  <td style="padding: 10px; font-weight: 600;">${escapeHtml(school.name)}</td>
-                  <td style="padding: 10px; text-align: center;">${school.studentsCount || 0}</td>
-                  <td style="padding: 10px; text-align: center;">${school.classesCount || 0}</td>
+                  <td style="padding: 10px; font-weight: 600;">${escapeHtml(school.school_name || `École ${school.school_id}`)}</td>
                   <td style="padding: 10px; text-align: center;">
                     <span class="badge" style="background: var(--accent); color: white;">
-                      ${(school.completionRate || 0).toFixed(1)}%
+                      ${(school.avg_score || 0).toFixed(1)}/20
                     </span>
                   </td>
                   <td style="padding: 10px; text-align: center;">
-                    <span class="badge" style="background: var(--card-hover);">
-                      ${(school.averageGrade || 0).toFixed(1)}/20
+                    <span class="badge" style="background: var(--success, #16a34a); color: white;">
+                      ${((school.completion_rate || 0) * 100).toFixed(1)}%
                     </span>
                   </td>
+                  <td style="padding: 10px; text-align: center;">${school.active_students || 0}</td>
+                  <td style="padding: 10px; text-align: center;">${school.classes_count || 0}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -369,16 +415,52 @@ function renderInterSchoolComparisonView(container) {
       </div>
     </div>
   `;
-    console.log('[View Director Analytics] HTML généré pour inter school comparison, length:', container.innerHTML.length);
+    
+    setTimeout(() => {
+      const avgScoreCanvas = container.querySelector('#chart-avg-score');
+      const completionCanvas = container.querySelector('#chart-completion-rate');
+      
+      if (avgScoreCanvas && schoolStats.length > 0) {
+        makeBarChart(avgScoreCanvas, schoolNames, avgScores, {
+          label: 'Score moyen / 20',
+          color: 'rgba(14, 165, 233, 0.8)',
+          chartOptions: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 20
+              }
+            }
+          }
+        });
+      }
+      
+      if (completionCanvas && schoolStats.length > 0) {
+        makeBarChart(completionCanvas, schoolNames, completionRates, {
+          label: 'Taux de complétion (%)',
+          color: 'rgba(16, 185, 129, 0.8)',
+          chartOptions: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100
+              }
+            }
+          }
+        });
+      }
+    }, 100);
   } catch (error) {
     console.error('[View Director Analytics] Erreur dans renderInterSchoolComparisonView:', error);
+    const errorMsg = getSchoolsError() || error.message || 'Une erreur est survenue lors du chargement des données.';
     container.innerHTML = `
       <div class="card" style="max-width: 600px; margin: 60px auto; text-align: center; padding: 24px;">
         <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
         <h2>Erreur de chargement</h2>
         <p style="color: var(--danger); margin: 16px 0;">
-          ${error.message || 'Une erreur est survenue lors du chargement des données.'}
+          ${escapeHtml(errorMsg)}
         </p>
+        <button class="btn primary" onclick="location.reload()" style="margin-top: 16px;">Réessayer</button>
       </div>
     `;
   }
@@ -392,12 +474,3 @@ function escapeHtml(str = '') {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
-
-// Export global pour app.js (doit être fait immédiatement au niveau du module)
-// S'assurer que c'est bien assigné (au cas où la première assignation n'a pas fonctionné)
-if (typeof window !== 'undefined') {
-  window.renderDirectorAnalyticsView = renderDirectorAnalyticsView;
-  console.log('[View Director Analytics] Export global final - fonction disponible:', typeof window.renderDirectorAnalyticsView);
-}
-export default { renderDirectorAnalyticsView };
-
