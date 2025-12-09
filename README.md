@@ -95,13 +95,13 @@ Après l'import, vous disposez de plusieurs comptes utilisateurs :
 
 | Rôle | Email | Mot de passe |
 |------|-------|--------------|
-| Directeur d'école | `directeur@ecole.fr` | `Azerty12345!` |
+| Directeur d'école | `directeur@ecole.fr` | `Demo1234!` |
 | Enseignant | `enseignant@ecole.fr` | `Demo1234!` |
 | Élève | `eleve@ecole.fr` | `Demo1234!` |
 | Pédagogue | `pedago@ecole.fr` | `Demo1234!` |
 | Campus Admin | `campus@admin.fr` | `Demo1234!` |
 
-**Note** : Tous les utilisateurs ont le mot de passe `Demo1234!` sauf le directeur d'école qui a `Azerty12345!`
+**Note** : Tous les utilisateurs ont le mot de passe `Demo1234!` (si ce n'est pas le cas, executez le script update_password.php présent dans le dossier scripts
 
 #### 4. Configurer la connexion à la base de données
 
