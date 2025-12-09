@@ -1836,17 +1836,7 @@ html[data-theme="dark"] .search-highlight {
   animation: onboardingFadeIn 0.3s ease-out;
 }
 
-.onboarding-modal {
-  background: var(--card);
-  border-radius: var(--radius-lg);
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-xl);
-  position: relative;
-  animation: onboardingSlideUp 0.4s ease-out;
-}
+/* Ancienne définition supprimée - maintenant gérée par la nouvelle définition plus bas */
 
 /* Animations spécifiques à l'onboarding (évite les conflits) */
 @keyframes onboardingFadeIn {
@@ -2133,18 +2123,18 @@ view-onboarding.closing .onboarding-modal {
    MODALE D'ONBOARDING (Nouvelle version)
    ========================================= */
 
+/* Modale centrée avec overlay */
 .onboarding-modal {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  animation: fadeIn 0.3s ease-out;
+  padding: 20px;
 }
 
 .onboarding-modal-overlay {
@@ -2162,13 +2152,14 @@ view-onboarding.closing .onboarding-modal {
   background: var(--card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
-  max-width: 1200px;
+  max-width: 600px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   animation: slideUp 0.3s ease-out;
+  z-index: 1;
 }
 
 @keyframes slideUp {
@@ -2184,7 +2175,7 @@ view-onboarding.closing .onboarding-modal {
 
 .onboarding-modal-header {
   position: relative;
-  padding: 32px 32px 16px;
+  padding: 24px 32px 16px;
   border-bottom: 1px solid var(--card-border);
 }
 
@@ -2225,8 +2216,9 @@ view-onboarding.closing .onboarding-modal {
 }
 
 .onboarding-modal-body {
-  padding: 24px 32px;
+  padding: 20px 32px;
   flex: 1;
+  overflow-y: auto;
 }
 
 .onboarding-intro {
@@ -2329,6 +2321,7 @@ view-onboarding.closing .onboarding-modal {
   border-top: 1px solid var(--card-border);
   display: flex;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .onboarding-modal-close-btn {
